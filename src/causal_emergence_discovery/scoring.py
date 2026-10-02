@@ -451,4 +451,3 @@ def compression_score(state_count: int, row_count: int) -> float:
 
 def _ordered_unique(columns: list[str]) -> list[str]:
     return list(dict.fromkeys(columns))
-
