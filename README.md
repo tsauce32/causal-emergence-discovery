@@ -86,7 +86,16 @@ outcome-dependent ranking use development data only. The chosen recipe is
 refitted on development data, frozen, and evaluated once on the outer holdout.
 Merge labels identify rank positions in the fitted recipe; they do not certify
 that clusters represent the same populations after refitting. A refit that
-cannot support a requested merge is marked unsupported.
+cannot support a requested merge is marked unsupported. Quantile merge IDs are
+ordered bin ranks; k-means merge IDs are canonical lexicographic centroid
+ranks. Merged recipes require all requested occupied states in the source fit
+and every development fold. Scores include the requested and observed topology
+for each fold. If any required fold fails, the candidate receives no score or
+partial average and is listed among rejected candidates, outside rankings and
+paths. Algorithm version 2 changes k-means initialization and label ordering,
+so earlier k-means scores and rankings may change. Older merged recipes without
+the required topology evidence can still be applied with their saved encoder
+but cannot be refit.
 
 `ranking_score` is a heuristic preference. Its components and weights are
 reported with the result. `predictive_r2_difference` is the signed mean paired
@@ -126,16 +135,50 @@ For example, a declared pre-treatment common cause can be included explicitly:
 }
 ```
 
-Without this declaration, pathway coefficients are treatment-only associations.
+Without this declaration, pathway models use only the declared treatments under
+the selected estimand; no additional covariates are inferred.
 `include_macro: true` adds the selected discrete macro while retaining all
 declared covariates. Context/environment roles never automatically add
-covariates. The `adjustment` report compares macro-only and declared adjustment,
-and flags declared covariates omitted or coarsened by the macro. A coefficient
-change is a descriptive diagnostic; stability does not establish sufficiency.
-Causal interpretation would require a justified pre-treatment adjustment set,
-conditional exchangeability, consistency, positivity, appropriate interference
-assumptions, and a correctly specified model. Current standard errors assume
-independent rows and are unsuitable for inference on repeated trajectories.
+covariates. `adjustment.estimand` controls how multiple declared interventions
+enter each pathway regression. It defaults to `joint_conditional`, which fits
+all declared interventions together with the declared adjustment columns (and
+the macro when requested); each reported coefficient is conditional on the
+other declared interventions in that same model. `marginal` fits a separate
+model for each intervention, conditional on the declared adjustment columns,
+while leaving the other interventions out. These are different linear
+associations. The default changes results for existing specs with multiple
+interventions; set `estimand: "marginal"` to retain separate-model behavior.
+Conditioning on co-treatments does not automatically identify a causal direct
+effect: the user's adjustment rationale must address mediator, collider,
+timing, and confounding risks. The library adds no variables beyond the
+declaration.
+
+The `adjustment` report compares macro-only and declared adjustment, and flags
+declared covariates omitted or coarsened by the macro. Rank and term diagnostics
+identify when a requested coefficient is aliased and cannot be estimated from
+the observed design; a pseudoinverse allocation does not identify the term.
+Categorical variables use indicator contrasts against a reference level, so a
+categorical intervention is reported as level contrasts rather than one numeric
+slope. Missing numeric predictors are imputed from training medians, and
+non-finite numeric values are treated as missing. Categorical missing values
+receive a distinct level, including when a literal category is named
+`__missing__`. Regression encoding infers numeric versus categorical handling
+from declared `ColumnSpec.type` when present, otherwise from training values
+only; a value in the outer holdout cannot change a feature's kind. CSV workflows
+load the study spec before the panel and preserve declared categorical tokens as
+strings, so labels such as `"01"` and `"1"` remain distinct. Frozen feature
+schemas report each kind, whether it came from a declaration or training-only
+inference, and outer missing, invalid numeric, and unknown category counts.
+Insufficient finite outcomes or non-estimable terms are reported without a
+coefficient. Saturated designs with zero residual degrees of freedom have no
+standard errors. Non-finite estimates or R² values fail clearly; uncertainty
+is reported unavailable with a status when it is non-finite.
+
+All reported coefficients are observational associations; the API does not
+certify causal effects. Causal interpretation requires a justified
+pre-treatment adjustment set and assumptions the software cannot verify.
+Standard errors use an IID row model and do not support inference for repeated
+entities. Fold score dispersion is descriptive, not an uncertainty interval.
 
 See [validation design](docs/validation.md) for contracts and control
 experiments. Standalone `score_macro()` calls without explicit validation

@@ -7,10 +7,12 @@ from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
 
+from causal_emergence_discovery.schema import FeatureSchema, numeric_values, resolve_feature_schema
+
 
 @dataclass(frozen=True)
 class DesignEncoder:
-    """Training-only imputation and categorical levels for a linear design."""
+    """Training-only variable kinds, imputation and categorical levels."""
 
     columns: tuple[str, ...]
     numeric_fills: dict[str, float]
@@ -19,28 +21,53 @@ class DesignEncoder:
     references: dict[str, tuple[bool, str]]
     feature_names: tuple[str, ...]
     term_metadata: tuple[dict, ...]
+    schema: FeatureSchema
 
     def transform(self, df: pd.DataFrame) -> np.ndarray:
+        return self.transform_with_report(df)[0]
+
+    def transform_with_report(self, df: pd.DataFrame) -> tuple[np.ndarray, dict[str, dict[str, int]]]:
         frames = []
+        diagnostics: dict[str, dict[str, int]] = {}
         for column in self.columns:
             if column in self.numeric_fills:
-                values = pd.to_numeric(df[column], errors="coerce").replace([np.inf, -np.inf], np.nan)
+                values, invalid = numeric_values(df[column])
+                diagnostics[column] = {
+                    "missing": int(df[column].isna().sum()),
+                    "invalid_numeric": invalid,
+                    "unknown_category": 0,
+                }
                 frames.append(values.fillna(self.numeric_fills[column]).to_numpy(dtype=float).reshape(-1, 1))
             else:
-                values = df[column].astype("string")
-                missing = values.isna().to_numpy()
+                raw = df[column]
+                values = raw.astype("string")
+                missing = raw.isna().to_numpy()
                 categories = values.fillna("").astype(str).to_numpy()
                 keys = [(True, "") if is_missing else (False, value) for is_missing, value in zip(missing, categories)]
                 levels = self.category_keys[column]
+                known = set(levels)
+                unknown = sum((not is_missing) and ((False, value) not in known) for is_missing, value in keys)
                 frames.append(np.column_stack([
                     np.fromiter((key == level for key in keys), dtype=float, count=len(keys))
                     for level in levels[1:]
                 ]) if len(levels) > 1 else np.empty((len(df), 0)))
-        return np.hstack(frames) if frames else np.empty((len(df), 0))
+                diagnostics[column] = {
+                    "missing": int(missing.sum()),
+                    "invalid_numeric": 0,
+                    "unknown_category": int(unknown),
+                }
+        matrix = np.hstack(frames) if frames else np.empty((len(df), 0))
+        return matrix, diagnostics
 
 
-def fit_design_encoder(df: pd.DataFrame, columns: list[str]) -> DesignEncoder:
+def fit_design_encoder(
+    df: pd.DataFrame,
+    columns: list[str],
+    column_specs=None,
+    schema: FeatureSchema | None = None,
+) -> DesignEncoder:
     """Fit medians and levels without consulting validation rows."""
+    resolved_schema = schema or resolve_feature_schema(df, columns, column_specs)
     numeric_fills: dict[str, float] = {}
     categories: dict[str, tuple[str, ...]] = {}
     category_keys: dict[str, tuple[tuple[bool, str], ...]] = {}
@@ -50,8 +77,8 @@ def fit_design_encoder(df: pd.DataFrame, columns: list[str]) -> DesignEncoder:
     metadata: list[dict] = []
     for column in dict.fromkeys(columns):
         values = df[column]
-        if pd.api.types.is_numeric_dtype(values) or pd.api.types.is_bool_dtype(values):
-            numeric = pd.to_numeric(values, errors="coerce").replace([np.inf, -np.inf], np.nan)
+        if resolved_schema.kind(column) == "numeric":
+            numeric, _ = numeric_values(values)
             numeric_fills[column] = float(numeric.median()) if numeric.notna().any() else 0.0
             names.append(column)
             used_names.add(column)
@@ -63,7 +90,10 @@ def fit_design_encoder(df: pd.DataFrame, columns: list[str]) -> DesignEncoder:
                 distinct.add((True, ""))
             levels = tuple(sorted(distinct, key=lambda item: (item[0], item[1])))
             category_keys[column] = levels
-            categories[column] = tuple("__missing__" if is_missing else value for is_missing, value in levels)
+            # Keep the public value-level list free of the null sentinel; the
+            # richer category_keys separately preserves actual nulls without
+            # colliding with a literal category named "__missing__".
+            categories[column] = tuple(value for is_missing, value in levels if not is_missing)
             if levels:
                 references[column] = levels[0]
                 ref = {"is_missing": levels[0][0], "value": None if levels[0][0] else levels[0][1]}
@@ -80,7 +110,10 @@ def fit_design_encoder(df: pd.DataFrame, columns: list[str]) -> DesignEncoder:
                     metadata.append({"term": column, "kind": "categorical", "feature_name": name,
                                      "level": {"is_missing": is_missing, "value": None if is_missing else value},
                                      "reference_level": ref})
-    return DesignEncoder(tuple(dict.fromkeys(columns)), numeric_fills, categories, category_keys, references, tuple(names), tuple(metadata))
+    return DesignEncoder(
+        tuple(dict.fromkeys(columns)), numeric_fills, categories, category_keys,
+        references, tuple(names), tuple(metadata), resolved_schema,
+    )
 
 
 @dataclass(frozen=True)
@@ -102,14 +135,29 @@ class LinearFit:
     term_metadata: tuple[dict, ...]
 
 
-def design_matrix(df: pd.DataFrame, columns: list[str]) -> tuple[np.ndarray, tuple[str, ...]]:
+def design_matrix(
+    df: pd.DataFrame,
+    columns: list[str],
+    column_specs=None,
+    schema: FeatureSchema | None = None,
+) -> tuple[np.ndarray, tuple[str, ...]]:
     """Fit and encode a standalone table; predictions use the fit's encoder."""
-    encoder = fit_design_encoder(df, columns)
+    encoder = fit_design_encoder(df, columns, column_specs, schema)
     return encoder.transform(df), encoder.feature_names
 
 
-def fit_linear_model(df: pd.DataFrame, feature_columns: list[str], target_column: str) -> LinearFit:
+def fit_linear_model(
+    df: pd.DataFrame,
+    feature_columns: list[str],
+    target_column: str,
+    column_specs=None,
+    schema: FeatureSchema | None = None,
+) -> LinearFit:
     """Fit OLS with SVD rank and coordinate-level estimability diagnostics."""
+    # Resolve undeclared types on the entire fit-training partition before
+    # filtering by target availability. Numeric fills and category levels are
+    # then fitted only on rows with usable targets under this frozen contract.
+    resolved_schema = schema or resolve_feature_schema(df, feature_columns, column_specs)
     clean = df.dropna(subset=[target_column]).reset_index(drop=True)
     y = pd.to_numeric(clean[target_column], errors="coerce").replace([np.inf, -np.inf], np.nan)
     clean = clean.loc[y.notna()].reset_index(drop=True)
@@ -117,7 +165,7 @@ def fit_linear_model(df: pd.DataFrame, feature_columns: list[str], target_column
     if len(clean) < 2:
         raise ValueError("At least two non-missing target rows are required.")
 
-    encoder = fit_design_encoder(clean, feature_columns)
+    encoder = fit_design_encoder(clean, feature_columns, schema=resolved_schema)
     x = np.column_stack([np.ones(len(clean)), encoder.transform(clean)])
     names = ("__intercept__", *encoder.feature_names)
     metadata = (
@@ -230,6 +278,8 @@ def cross_validated_r2(
     *,
     folds: int = 5,
     splits=None,
+    column_specs=None,
+    schema: FeatureSchema | None = None,
 ) -> tuple[float, list[float]]:
     """Evaluate declared splits, or legacy row interpolation when omitted.
 
@@ -248,7 +298,7 @@ def cross_validated_r2(
         train_indices, test_indices = (split.train_indices, split.test_indices) if hasattr(split, "train_indices") else split
         train = clean.iloc[list(train_indices)].reset_index(drop=True)
         test = clean.iloc[list(test_indices)].reset_index(drop=True)
-        fit = fit_linear_model(train, feature_columns, target_column)
+        fit = fit_linear_model(train, feature_columns, target_column, column_specs, schema)
         score = predict_r2(fit, test, feature_columns, target_column)
         scores.append(score)
     if not scores:
@@ -258,8 +308,17 @@ def cross_validated_r2(
 
 def predict_linear_model(fit: LinearFit, df: pd.DataFrame) -> np.ndarray:
     """Predict with frozen training preprocessing; unknown categories are zero."""
-    x = np.column_stack([np.ones(len(df)), fit.encoder.transform(df)])
-    return x @ fit.prediction_coefficients
+    return predict_linear_model_with_report(fit, df)[0]
+
+
+def predict_linear_model_with_report(
+    fit: LinearFit,
+    df: pd.DataFrame,
+) -> tuple[np.ndarray, dict[str, dict[str, int]]]:
+    """Predict and report missing, malformed numeric, and unseen category counts."""
+    transformed, diagnostics = fit.encoder.transform_with_report(df)
+    x = np.column_stack([np.ones(len(df)), transformed])
+    return x @ fit.prediction_coefficients, diagnostics
 
 
 def predict_r2(
@@ -296,6 +355,8 @@ def treatment_effect_records(
     adjustment_columns: list[str],
     *,
     estimand: str = "joint_conditional",
+    column_specs=None,
+    schema: FeatureSchema | None = None,
 ) -> list[dict]:
     """Return term-aware intervention records under a declared OLS estimand.
 
@@ -341,7 +402,9 @@ def treatment_effect_records(
         try:
             fit_key = tuple(columns)
             if fit_key not in fitted_models:
-                fitted_models[fit_key] = fit_linear_model(df, columns, target_column)
+                fitted_models[fit_key] = fit_linear_model(
+                    df, columns, target_column, column_specs=column_specs, schema=schema
+                )
             fit = fitted_models[fit_key]
             if isinstance(fit, Exception):
                 raise fit
@@ -402,9 +465,10 @@ def treatment_effect_records(
                     "uncertainty_status": _uncertainty_status(fit, index),
                 })
             record.update({"terms": terms, "estimable": all(term["estimable"] for term in terms), "status": "categorical"})
+            record["note"] = "intervention was not represented as a single numeric term; categorical levels are reported as reference contrasts"
         else:
             record["status"] = "categorical"
-            record["note"] = "intervention has no non-reference estimable design term"
+            record["note"] = "intervention was not represented as a single numeric term; it has no non-reference estimable design term"
         estimates.append(record)
     return estimates
 
@@ -438,10 +502,13 @@ def effect_estimates(
     adjustment_columns: list[str],
     *,
     estimand: str = "joint_conditional",
+    column_specs=None,
+    schema: FeatureSchema | None = None,
 ) -> list[dict]:
     """Compatibility wrapper routed through term-aware treatment records."""
     records = treatment_effect_records(
-        df, interventions, target_column, adjustment_columns, estimand=estimand
+        df, interventions, target_column, adjustment_columns, estimand=estimand,
+        column_specs=column_specs, schema=schema,
     )
     estimates = []
     for record in records:

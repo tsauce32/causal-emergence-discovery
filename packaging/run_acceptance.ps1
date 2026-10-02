@@ -8,6 +8,7 @@ $Repository = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $ArtifactRoot = Join-Path $PSScriptRoot "artifacts"
 $DistributionRoot = Join-Path $ArtifactRoot "dist"
 $PytestTempRoot = Join-Path $ArtifactRoot "pytest-temp"
+$JunitPath = Join-Path $ArtifactRoot "package-acceptance.xml"
 $LogPath = Join-Path $ArtifactRoot "package-acceptance.log"
 
 New-Item -ItemType Directory -Force -Path $DistributionRoot | Out-Null
@@ -22,7 +23,7 @@ try {
         throw "Wheel/sdist build failed with exit code $LASTEXITCODE."
     }
 
-    & $Python -m pytest -q --basetemp $PytestTempRoot tests/test_package_acceptance.py 2>&1 | Tee-Object -FilePath $LogPath -Append
+    & $Python -m pytest -q --basetemp $PytestTempRoot --junitxml $JunitPath tests/test_package_acceptance.py 2>&1 | Tee-Object -FilePath $LogPath -Append
     if ($LASTEXITCODE -ne 0) {
         throw "Installed-package acceptance failed with exit code $LASTEXITCODE."
     }

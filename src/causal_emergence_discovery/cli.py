@@ -7,14 +7,14 @@ import json
 import sys
 from pathlib import Path
 
-from causal_emergence_discovery.discovery import DiscoveryConfig, discover_from_csv
+from causal_emergence_discovery.discovery import DiscoveryConfig, run_discovery
 from causal_emergence_discovery.panel import load_panel_csv, validate_panel
 from causal_emergence_discovery.spec import load_spec
 
 
 def validate_command(args: argparse.Namespace) -> int:
     spec = load_spec(args.spec)
-    df = load_panel_csv(args.csv)
+    df = load_panel_csv(args.csv, spec=spec)
     summary = validate_panel(df, spec)
     print(f"PASS {args.csv}")
     print(f"rows: {summary.row_count}")
@@ -26,6 +26,8 @@ def validate_command(args: argparse.Namespace) -> int:
 
 
 def discover_command(args: argparse.Namespace) -> int:
+    spec = load_spec(args.spec)
+    df = load_panel_csv(args.csv, spec=spec)
     config = DiscoveryConfig(
         outcome=args.outcome,
         lag=args.lag,
@@ -38,11 +40,11 @@ def discover_command(args: argparse.Namespace) -> int:
         holdout_fraction=args.holdout_fraction,
         seed=args.seed,
     )
-    result = discover_from_csv(args.csv, args.spec, config)
+    result = run_discovery(df, spec, config)
     if args.output:
-        Path(args.output).write_text(json.dumps(result, indent=2), encoding="utf-8")
+        Path(args.output).write_text(json.dumps(result, indent=2, allow_nan=False), encoding="utf-8")
     if args.json:
-        print(json.dumps(result, indent=2))
+        print(json.dumps(result, indent=2, allow_nan=False))
     else:
         _print_summary(result)
     return 0
@@ -51,7 +53,7 @@ def discover_command(args: argparse.Namespace) -> int:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="ced",
-        description="Discover emergent macro-causal hypotheses in longitudinal tabular data.",
+        description="Rank candidate macro representations of longitudinal tabular data.",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -106,6 +108,26 @@ def _print_summary(result: dict[str, object]) -> None:
         holdout_text = "n/a" if fraction is None else f"{fraction:.0%}"
         print(f"validation: {config['validation_mode']}  outer holdout: {holdout_text}")
     print(f"candidate macro features: {len(columns['macro_features'])}")
+    rejected_count = sum(
+        len(search.get("rejected_candidates", []))
+        for search in result.get("searches", [])
+    )
+    if rejected_count:
+        print(f"rejected macro candidates (unsupported refit topology): {rejected_count}")
+    feature_schema = result.get("feature_schema")
+    if isinstance(feature_schema, dict):
+        for name, item in feature_schema.items():
+            if not isinstance(item, dict):
+                continue
+            missing = item.get("missing_outer_values", 0)
+            invalid = item.get("invalid_outer_values", 0)
+            unknown = item.get("unknown_outer_categories", 0)
+            if missing or invalid or unknown:
+                print(
+                    f"outer feature {name}: kind={item.get('kind', 'unknown')} "
+                    f"source={item.get('source', 'unknown')} missing={missing} "
+                    f"invalid_numeric={invalid} unknown_categories={unknown}"
+                )
     if top_macros:
         best = top_macros[0]
         ranking_score = best.get("ranking_score", best.get("score"))
@@ -156,8 +178,16 @@ def _print_summary(result: dict[str, object]) -> None:
         micro_r2 = evaluation.get("micro_r2")
         if macro_r2 is None or micro_r2 is None:
             reason = evaluation.get("reason", evaluation.get("unavailable_reason"))
-            suffix = f" reason={reason}" if reason else ""
-            print(f"untouched holdout: status={evaluation_status}{suffix}")
+            if evaluation_status == "not_evaluable":
+                suffix = f" reason={reason}" if reason else ""
+                finite = evaluation.get("finite_test_targets")
+                rows = evaluation.get("test_rows")
+                if finite is not None and rows is not None:
+                    suffix += f" finite_test_targets={finite}/{rows}"
+                print(f"untouched holdout: not_evaluable{suffix}")
+            else:
+                suffix = f" reason={reason}" if reason else ""
+                print(f"untouched holdout: status={evaluation_status}{suffix}")
             support = evaluation.get("target_support")
             if isinstance(support, dict):
                 reserved = support.get("reserved_rows", support.get("reserved"))
@@ -174,16 +204,58 @@ def _print_summary(result: dict[str, object]) -> None:
             )
     pathways = result["candidate_pathways"]
     if pathways:
+        adjustment = result.get("adjustment") or {}
+        estimand = adjustment.get("estimand")
+        if estimand is not None:
+            print(f"pathway regression estimand: {estimand}")
+        uncertainty = adjustment.get("uncertainty") or {}
+        if uncertainty.get("panel_uncertainty_status") == "unsupported":
+            print("pathway uncertainty: IID OLS; panel-robust uncertainty unsupported")
         print("candidate pathways:")
         for pathway in pathways[:5]:
             coefficient = pathway["coefficient"]
             coefficient_text = "n/a" if coefficient is None else f"{coefficient:.4f}"
             print(
                 f"  {pathway['intervention']} -> {columns['target']}: "
-                f"associational coef={coefficient_text}"
+                f"associational coef={coefficient_text} "
+                f"status={pathway.get('status', 'unknown')}"
             )
+            design_rank = pathway.get("design_rank", pathway.get("rank"))
+            design_columns = pathway.get("design_columns")
+            if design_rank is not None and design_columns is not None:
+                residual_df = pathway.get("residual_df")
+                diagnostic = f"rank={design_rank}/{design_columns} residual_df={residual_df}"
+                aliased = pathway.get("aliased_terms") or []
+                if aliased:
+                    diagnostic += f" aliased={','.join(map(str, aliased))}"
+                print(f"    design: {diagnostic}")
+            for term in pathway.get("terms", []):
+                if not isinstance(term, dict):
+                    continue
+                term_coefficient = term.get("coefficient")
+                term_text = "n/a" if term_coefficient is None else f"{term_coefficient:.4f}"
+                label = term.get("feature_name", term.get("term", pathway['intervention']))
+                contrast = ""
+                if term.get("kind") == "categorical":
+                    contrast = (
+                        f" level={_format_category(term.get('level'))}"
+                        f" vs reference={_format_category(term.get('reference_level'))}"
+                    )
+                print(
+                    f"    term {label}{contrast}: coef={term_text} "
+                    f"status={term.get('status', 'unknown')} "
+                    f"uncertainty={term.get('uncertainty_status', 'unavailable')}"
+                )
     for warning in result["warnings"]:
         print(f"warning: {warning}")
+
+
+def _format_category(category: object) -> str:
+    if isinstance(category, dict):
+        if category.get("is_missing"):
+            return "<missing>"
+        return str(category.get("value"))
+    return str(category)
 
 
 if __name__ == "__main__":

@@ -155,15 +155,13 @@ def test_resolver_rejects_role_exposure_even_without_interventions_alias():
         })
 
 
-def test_refit_replays_merges_for_validation_states_absent_from_training():
+def test_refit_rejects_merged_recipe_when_requested_topology_is_absent():
+    from causal_emergence_discovery.macro import MacroRefitTopologyError
+
     original = quantile_macro(pd.DataFrame({"x": np.arange(12, dtype=float)}), "x", 3)
     merged = merge_macro_states(original, 0, 1)
-    refitted = refit_macro(merged, pd.DataFrame({"x": [2.0, 2.0, 2.0, 2.0]}))
-    assert refitted.labels.tolist() == [0, 0, 0, 0]
-    assert refitted.metadata["refit_merge_degeneracies"] == [
-        {"left": 0, "right": 1, "reason": "right_state_absent_in_refit_training"}
-    ]
-    assert apply_macro(refitted, pd.DataFrame({"x": [2.0, 20.0]})).labels.tolist() == [0, 0]
+    with pytest.raises(MacroRefitTopologyError):
+        refit_macro(merged, pd.DataFrame({"x": [2.0, 2.0, 2.0, 2.0]}))
 
 
 @pytest.mark.parametrize("adjustment", [

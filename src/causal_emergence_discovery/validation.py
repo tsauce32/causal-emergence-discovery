@@ -49,6 +49,123 @@ class ValidationPlan:
         }
 
 
+@dataclass(frozen=True)
+class TargetSplit:
+    """Usable target rows within a split whose cohort was already reserved."""
+
+    train_indices: tuple[int, ...]
+    test_indices: tuple[int, ...]
+    reserved_train_rows: int
+    reserved_test_rows: int
+    ineligible_train_rows: int
+    ineligible_test_rows: int
+
+    def to_dict(self) -> dict[str, int]:
+        return {
+            "reserved_train_rows": self.reserved_train_rows,
+            "reserved_test_rows": self.reserved_test_rows,
+            "usable_train_rows": len(self.train_indices),
+            "usable_test_rows": len(self.test_indices),
+            "ineligible_train_rows": self.ineligible_train_rows,
+            "ineligible_test_rows": self.ineligible_test_rows,
+        }
+
+
+def usable_target_split(
+    df: pd.DataFrame,
+    split: DataSplit,
+    eligibility_column: str,
+    *,
+    minimum_train_rows: int = 2,
+    minimum_test_rows: int = 2,
+) -> TargetSplit:
+    """Filter target eligibility after planning, keeping the reserved cohort fixed.
+
+    The returned indices address the same frame as ``split``. Insufficient
+    support raises an error that reports the reserved and usable row counts;
+    callers must not build a replacement split from the remaining outcomes.
+    """
+    if eligibility_column not in df.columns:
+        raise ValueError(f"Target eligibility column {eligibility_column!r} is missing.")
+    eligibility = df[eligibility_column]
+    if eligibility.isna().any() or not eligibility.isin([True, False]).all():
+        raise ValueError(
+            f"Target eligibility column {eligibility_column!r} must contain only booleans."
+        )
+
+    train = tuple(i for i in split.train_indices if bool(eligibility.iloc[i]))
+    test = tuple(i for i in split.test_indices if bool(eligibility.iloc[i]))
+    support = TargetSplit(
+        train_indices=train,
+        test_indices=test,
+        reserved_train_rows=len(split.train_indices),
+        reserved_test_rows=len(split.test_indices),
+        ineligible_train_rows=len(split.train_indices) - len(train),
+        ineligible_test_rows=len(split.test_indices) - len(test),
+    )
+    if len(train) < minimum_train_rows or len(test) < minimum_test_rows:
+        counts = support.to_dict()
+        raise ValueError(
+            f"Reserved split has insufficient usable target support for "
+            f"{eligibility_column!r}: {counts}; require at least "
+            f"{minimum_train_rows} training and {minimum_test_rows} test rows. "
+            "The reserved cohort is unchanged; choose a new study design explicitly "
+            "rather than silently replanning from observed outcomes."
+        )
+    return support
+
+
+def target_support_audit(
+    df: pd.DataFrame,
+    plan: ValidationPlan,
+    target_column: str,
+) -> dict[str, Any]:
+    """Report finite target support within every already planned split.
+
+    Outer indices are reported against ``df``. Inner indices are reported
+    against the reset-index outer-development frame, matching ValidationPlan's
+    documented index scopes. This function never changes cohort membership.
+    """
+    if target_column not in df.columns:
+        raise ValueError(f"Target column {target_column!r} is missing.")
+    target = pd.to_numeric(df[target_column], errors="coerce").replace(
+        [np.inf, -np.inf], np.nan
+    )
+    eligible = target.notna().to_numpy()
+
+    def describe(split: DataSplit, mask: np.ndarray) -> dict[str, Any]:
+        train = list(split.train_indices)
+        test = list(split.test_indices)
+        return {
+            "name": split.name,
+            "index_scope": "supplied_frame_positions",
+            "reserved_train_rows": len(train),
+            "reserved_test_rows": len(test),
+            "usable_train_rows": int(mask[train].sum()),
+            "usable_test_rows": int(mask[test].sum()),
+            "ineligible_train_indices": [i for i in train if not mask[i]],
+            "ineligible_test_indices": [i for i in test if not mask[i]],
+        }
+
+    outer = describe(plan.outer, eligible)
+    development = df.iloc[list(plan.outer.train_indices)].reset_index(drop=True)
+    dev_target = pd.to_numeric(development[target_column], errors="coerce").replace(
+        [np.inf, -np.inf], np.nan
+    )
+    dev_eligible = dev_target.notna().to_numpy()
+    inner = []
+    for split in plan.inner:
+        record = describe(split, dev_eligible)
+        record["index_scope"] = "outer_development_frame_positions"
+        inner.append(record)
+    return {
+        "target_column": target_column,
+        "eligibility_rule": "numeric finite target value",
+        "outer": outer,
+        "inner": inner,
+    }
+
+
 _MODES = {"entity_holdout", "forward_time", "within_entity_interpolation"}
 
 

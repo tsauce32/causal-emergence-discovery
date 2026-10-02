@@ -11,14 +11,33 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-from causal_emergence_discovery.macro import MacroAssignment, apply_macro, refit_macro
+from causal_emergence_discovery.macro import MacroAssignment, MacroRefitTopologyError, apply_macro, refit_macro
 from causal_emergence_discovery.models import fit_linear_model, predict_r2
+from causal_emergence_discovery.spec import ColumnSpec
 
 MACRO_COLUMN = "__ced_macro_state"
 SCORE_SCHEMA_VERSION = 2
 DEFAULT_PREDICTIVE_SCOPE = "row_modulo_refit_cv"
 _VALIDATION_SPECIFICITY = "mean_positive_clipped_validation_r2_of_training_fitted_state_means"
 _DESCRIPTIVE_SPECIFICITY = "descriptive_between_state_outcome_variance_share"
+
+
+class MacroScoreRefitError(ValueError):
+    """A candidate cannot be scored on every required development fold.
+
+    ``diagnostics`` contains one entry for each unsupported fold. Scoring is
+    all-or-nothing: a candidate with an unsupported refit is never assigned a
+    partial score from its remaining folds.
+    """
+
+    def __init__(self, macro_name: str, diagnostics: list[dict[str, object]]):
+        self.macro_name = macro_name
+        self.status = "unsupported_refit_topology"
+        self.diagnostics = diagnostics
+        super().__init__(
+            f"Macro {macro_name!r} cannot be compared: refit topology is unsupported "
+            f"in {len(diagnostics)} required validation fold(s)."
+        )
 
 
 @dataclass(frozen=True)
@@ -105,6 +124,7 @@ class MacroScore:
     fold_r2_differences: tuple[float, ...]
     predictive_evaluation_scope: str
     predictive_evaluation_ids: tuple[str, ...] | None = None
+    fold_refit_topologies: tuple[dict[str, object], ...] = ()
 
     def __post_init__(self) -> None:
         scalars = (self.ranking_score, self.predictive_r2_difference, self.macro_r2,
@@ -216,6 +236,7 @@ class MacroScore:
             "fold_r2_differences": list(self.fold_r2_differences),
             "macro_fold_r2_std": self.macro_fold_r2_std, "micro_fold_r2_std": self.micro_fold_r2_std,
             "score": self.ranking_score, "fold_scores": list(self.macro_fold_scores),
+            "fold_refit_topologies": [dict(item) for item in self.fold_refit_topologies],
         }
 
 
@@ -230,6 +251,7 @@ def score_macro(
     folds: int = 5,
     validation_splits=None,
     predictive_scores: PairedPredictiveScores | None = None,
+    column_specs=None,
 ) -> MacroScore:
     """Rank a candidate using paired scores and explicit specificity definitions.
 
@@ -252,15 +274,17 @@ def score_macro(
         idx = np.arange(len(working))
         validation_splits = [(idx[idx % folds != fold], idx[idx % folds == fold]) for fold in range(folds)]
 
+    model_specs = {**(column_specs or {}), MACRO_COLUMN: ColumnSpec(name=MACRO_COLUMN, variable_type="categorical")}
     labeled = working.assign(**{MACRO_COLUMN: macro.labels.to_numpy()})
     descriptive = outcome_specificity(labeled, MACRO_COLUMN, target_column)
     validation_specificity = None
+    fold_refit_topologies = []
     if predictive_scores is not None:
         paired = predictive_scores
         if validation_splits is None:
             specificity, definition = descriptive, "descriptive_between_state_outcome_variance_share"
         else:
-            specificity = _validation_specificity(working, macro, target_column, validation_splits)
+            specificity = _validation_specificity(working, macro, target_column, validation_splits, column_specs=column_specs)
             validation_specificity = specificity
             definition = "mean_positive_clipped_validation_r2_of_training_fitted_state_means"
     else:
@@ -270,19 +294,27 @@ def score_macro(
         macro_scores, micro_scores, spec_scores = [], [], []
         macro_features = _ordered_unique([*intervention_columns, MACRO_COLUMN])
         micro_features = _ordered_unique([*intervention_columns, *micro_feature_columns])
-        for split in splits:
+        topology_failures = []
+        for fold_index, split in enumerate(splits):
             train_idx, test_idx = _split_indices(split, len(working))
             train = working.iloc[train_idx].reset_index(drop=True).copy()
             test = working.iloc[test_idx].reset_index(drop=True).copy()
-            fitted = refit_macro(macro, train)
+            try:
+                fitted = refit_macro(macro, train, column_specs=column_specs)
+            except MacroRefitTopologyError as exc:
+                topology_failures.append({"fold_index": fold_index, "topology": exc.diagnostics})
+                continue
+            fold_refit_topologies.append({"fold_index": fold_index, **fitted.metadata["refit_topology"]})
             train[MACRO_COLUMN] = fitted.labels.astype(str).to_numpy()
             test[MACRO_COLUMN] = apply_macro(fitted, test).labels.astype(str).to_numpy()
-            macro_fit = fit_linear_model(train, macro_features, target_column)
-            micro_fit = fit_linear_model(train, micro_features, target_column)
-            state_fit = fit_linear_model(train, [MACRO_COLUMN], target_column)
+            macro_fit = fit_linear_model(train, macro_features, target_column, column_specs=model_specs)
+            micro_fit = fit_linear_model(train, micro_features, target_column, column_specs=model_specs)
+            state_fit = fit_linear_model(train, [MACRO_COLUMN], target_column, column_specs=model_specs)
             macro_scores.append(predict_r2(macro_fit, test, macro_features, target_column))
             micro_scores.append(predict_r2(micro_fit, test, micro_features, target_column))
             spec_scores.append(_positive_specificity(predict_r2(state_fit, test, [MACRO_COLUMN], target_column)))
+        if topology_failures:
+            raise MacroScoreRefitError(macro.name, topology_failures)
         paired = PairedPredictiveScores(
             tuple(macro_scores), tuple(micro_scores),
             (DEFAULT_PREDICTIVE_SCOPE if generated_default_splits
@@ -310,6 +342,7 @@ def score_macro(
         fold_r2_differences=paired.fold_r2_differences,
         predictive_evaluation_scope=paired.evaluation_scope,
         predictive_evaluation_ids=paired.evaluation_ids,
+        fold_refit_topologies=tuple(fold_refit_topologies),
     )
 
 
@@ -328,15 +361,16 @@ def _split_indices(split, row_count: int):
     return train_idx.tolist(), test_idx.tolist()
 
 
-def _validation_specificity(df: pd.DataFrame, macro: MacroAssignment, target: str, splits) -> float:
+def _validation_specificity(df: pd.DataFrame, macro: MacroAssignment, target: str, splits, column_specs=None) -> float:
     scores = []
+    model_specs = {**(column_specs or {}), MACRO_COLUMN: ColumnSpec(name=MACRO_COLUMN, variable_type="categorical")}
     for split in splits:
         train_idx, test_idx = _split_indices(split, len(df))
         train, test = df.iloc[train_idx].reset_index(drop=True).copy(), df.iloc[test_idx].reset_index(drop=True).copy()
-        fitted = refit_macro(macro, train)
+        fitted = refit_macro(macro, train, column_specs=column_specs)
         train[MACRO_COLUMN] = fitted.labels.astype(str).to_numpy()
         test[MACRO_COLUMN] = apply_macro(fitted, test).labels.astype(str).to_numpy()
-        fit = fit_linear_model(train, [MACRO_COLUMN], target)
+        fit = fit_linear_model(train, [MACRO_COLUMN], target, column_specs=model_specs)
         scores.append(_positive_specificity(predict_r2(fit, test, [MACRO_COLUMN], target)))
     if not scores:
         raise ValueError("No development validation folds were supplied.")

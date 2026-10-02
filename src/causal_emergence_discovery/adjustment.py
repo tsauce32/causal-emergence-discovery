@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 from causal_emergence_discovery.macro import MacroAssignment
-from causal_emergence_discovery.spec import StudySpec
+from causal_emergence_discovery.spec import ColumnSpec, StudySpec
 
 
 def resolve_adjustment(
@@ -95,8 +95,18 @@ def adjustment_sufficiency_audit(
     declared_columns = list(resolved["columns"])
     declared_model_adjustments = declared_columns + (macro_covariates if resolved["include_macro"] else [])
 
-    macro_only = _coefficient_comparison(working, interventions, target_column, macro_covariates, estimand=effective_estimand)
-    declared_fit = _coefficient_comparison(working, interventions, target_column, declared_model_adjustments, estimand=effective_estimand)
+    model_specs = {
+        **spec.columns,
+        macro_column: ColumnSpec(name=macro_column, variable_type="categorical"),
+    }
+    macro_only = _coefficient_comparison(
+        working, interventions, target_column, macro_covariates,
+        estimand=effective_estimand, column_specs=model_specs,
+    )
+    declared_fit = _coefficient_comparison(
+        working, interventions, target_column, declared_model_adjustments,
+        estimand=effective_estimand, column_specs=model_specs,
+    )
     source_overlap = [column for column in declared_columns if column in macro_features]
     omitted = [column for column in declared_columns if column not in macro_features]
     coarsened = []
@@ -186,10 +196,14 @@ def _coefficient_comparison(
     adjustment_columns: list[str],
     *,
     estimand: str = "joint_conditional",
+    column_specs=None,
 ) -> list[dict[str, Any]]:
     from causal_emergence_discovery.models import treatment_effect_records
 
-    records = treatment_effect_records(df, interventions, target_column, adjustment_columns, estimand=estimand)
+    records = treatment_effect_records(
+        df, interventions, target_column, adjustment_columns,
+        estimand=estimand, column_specs=column_specs,
+    )
     return [{"intervention": item.get("treatment"), **item} for item in records]
 
 
