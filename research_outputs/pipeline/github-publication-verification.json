@@ -1,0 +1,22 @@
+{
+  "integrated_source_commit": "735c6a8fa1111e2ac53026ec3cbe2c23e5f5625d",
+  "original_benchmark_handoff_commit": "fedf03fc84d1e9f3b7afed14e29d5a2ee8d4e300",
+  "tested_combined_code_commit": "7afb5fece33de449dff25fcbb555afd72dc55c23",
+  "combined_tests": {
+    "passed": 229,
+    "failed": 0,
+    "skipped": 0,
+    "command": "python -m pytest tests --ignore=tests/test_package_acceptance.py -q"
+  },
+  "installed_package_checks": "Both wheel/sdist acceptance checks passed for the ready integrated source; not rerun by this combined test command",
+  "library_src_tree_unchanged": true,
+  "pyproject_unchanged": true,
+  "recorded_experiment_kernel_byte_checks": {
+    "benchmarks/pipeline/PROTOCOL.md": true,
+    "benchmarks/pipeline/baselines.py": true,
+    "benchmarks/pipeline/dgps.py": true,
+    "benchmarks/pipeline/protocol.py": true,
+    "benchmarks/pipeline/runner.py": true
+  },
+  "scope": "Publication combines the ready source and benchmark; original 384-run experiment remains labeled against its actual source commit"
+}

@@ -70,3 +70,28 @@ aggregates paired outer R²
 differences, replicate-level Monte Carlo uncertainty, selection frequencies,
 support, and failures. Fold-to-fold standard deviations are not treated as
 standard errors. The report contains no emergence decision flag.
+
+## Reproduce from a GitHub clone
+
+The recorded experiment used integrated source commit
+`735c6a8fa1111e2ac53026ec3cbe2c23e5f5625d`, which is an ancestor of this
+publication branch. Keep that source in a separate worktree so the runner can
+verify its exact commit while loading the benchmark from the publication
+checkout. Python 3.12 and the NumPy/Pandas versions in
+`research_outputs/pipeline/experiment-manifest.json` were used for the recorded
+run. The following commands run from the publication checkout:
+
+```sh
+python -m pip install -e ".[dev]" jsonschema
+git worktree add --detach ../discovery-integrated 735c6a8fa1111e2ac53026ec3cbe2c23e5f5625d
+python -m benchmarks.pipeline.runner --profile full --workers 4 --source ../discovery-integrated --expected-commit 735c6a8fa1111e2ac53026ec3cbe2c23e5f5625d --readiness-status research_outputs/pipeline/integrated-source-readiness.json --output ../benchmark-results-full
+python -m benchmarks.pipeline.report --run-dir ../benchmark-results-full --output ../benchmark-report --frozen research_outputs/pipeline/full-profile-frozen-final.json
+```
+
+Use fresh output directories. The readiness snapshot's historical workspace
+paths are provenance; the runner verifies the source path supplied on the
+command line against its recorded commit. Full numerical results, the frozen
+profile and seeds, generator amendment, independent audits, and source/compact
+artifact hashes are committed under `research_outputs/pipeline`. The original
+384-run study is reported against its pinned source rather than relabeled as a
+new experiment on the publication commit.
