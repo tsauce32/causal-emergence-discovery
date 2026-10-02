@@ -1,0 +1,14 @@
+{
+  "amended_utc": "2026-10-02T14:32:39.387957+00:00",
+  "final_outer_results_inspected": false,
+  "reason": "Conditional treatment correlation was absent after U adjustment. Add shared latent W to both treatments so the joint conditional coefficient model is tested under residual co-treatment correlation.",
+  "old_dgp_sha256": "8f6063acaceabe7f4b921340c9faa85e984ebfb6cf5fdccf5776e864c1c9658b",
+  "new_dgp_sha256": "df52f739186d9c52f609846a3fd7ad504f8b693a017c8e799790372e451ea518",
+  "unchanged": "cells, sample sizes, search budget, split rules, seed families, primary comparisons, decision rule and uncertainty protocol",
+  "new_mechanism": "A=U+0.45W+0.3eA; B=0.8U+0.45W+0.3eB; Y[t+1]=1.7A-0.9B+1.2U+error. W independent of U and all errors, unobserved and no direct outcome effect.",
+  "prespecified_joint_coefficients": {
+    "A": 1.7,
+    "B": -0.9
+  },
+  "scientific_review": "approved as pre-final conditional-correlation/joint-estimand stress"
+}

@@ -1,0 +1,10 @@
+{
+  "trials": 24,
+  "successful": 24,
+  "native_coefficient_checks": 4,
+  "harness_commit": "8473ec011ba76940f8e2da170f5043dc5991f1ef",
+  "source_commit": "735c6a8fa1111e2ac53026ec3cbe2c23e5f5625d",
+  "profile_changed": false,
+  "dgp_changed": false,
+  "previous_quick_failures_preserved": "quick-integrated"
+}

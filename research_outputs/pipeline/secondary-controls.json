@@ -1,0 +1,2237 @@
+{
+  "additive_signal::entity_holdout": {
+    "oracle_micro_r2": {
+      "n": 0,
+      "mean": null,
+      "mc_se": null
+    },
+    "macro_minus_oracle_micro": {
+      "n": 0,
+      "mean": null,
+      "mc_se": null
+    },
+    "failure_reasons": {},
+    "selected_recipe_counts": {
+      "q3:x1": 32
+    },
+    "candidate_refit_rejections": {
+      "runs_with_rejections": 0,
+      "total_rejected_candidate_evaluations": 0
+    }
+  },
+  "correlated_treatments::entity_holdout": {
+    "oracle_micro_r2": {
+      "n": 0,
+      "mean": null,
+      "mc_se": null
+    },
+    "macro_minus_oracle_micro": {
+      "n": 0,
+      "mean": null,
+      "mc_se": null
+    },
+    "failure_reasons": {},
+    "joint_raw_confounder": {
+      "treatment_a": {
+        "n": 32,
+        "mean": 1.7296712177774194,
+        "mc_se": 0.019468221063520887
+      },
+      "treatment_b": {
+        "n": 32,
+        "mean": -0.9314243908635659,
+        "mc_se": 0.02061272110540926
+      },
+      "u": {
+        "n": 32,
+        "mean": 1.1970879292723156,
+        "mc_se": 0.014885288127686453
+      }
+    },
+    "coarse_macro_adjusted": {
+      "treatment_a": {
+        "n": 32,
+        "mean": 2.1514245770531946,
+        "mc_se": 0.022722887228273567
+      },
+      "treatment_b": {
+        "n": 32,
+        "mean": -0.8263704706292995,
+        "mc_se": 0.023701941873196734
+      }
+    },
+    "package_native_joint_coefficients": {
+      "treatment_a": {
+        "n": 32,
+        "mean": 1.7296712177774196,
+        "mc_se": 0.01946822106352085
+      },
+      "treatment_b": {
+        "n": 32,
+        "mean": -0.931424390863566,
+        "mc_se": 0.02061272110540926
+      }
+    },
+    "package_native_joint_validation_count": 32,
+    "selected_recipe_counts": {
+      "q3:u": 32
+    },
+    "candidate_refit_rejections": {
+      "runs_with_rejections": 0,
+      "total_rejected_candidate_evaluations": 0
+    }
+  },
+  "entity_fingerprint::entity_holdout": {
+    "oracle_micro_r2": {
+      "n": 0,
+      "mean": null,
+      "mc_se": null
+    },
+    "macro_minus_oracle_micro": {
+      "n": 0,
+      "mean": null,
+      "mc_se": null
+    },
+    "failure_reasons": {},
+    "selected_recipe_counts": {
+      "kmeans:3|merge:0+2": 2,
+      "q3:x2|merge:0+2": 1,
+      "q3:x1|merge:0+1": 2,
+      "q3:x3|merge:0+1": 2,
+      "q3:x2|merge:1+2": 4,
+      "q3:composite|merge:0+1": 4,
+      "q3:x1|merge:1+2": 1,
+      "q3:x3|merge:0+2": 1,
+      "kmeans:2": 2,
+      "q3:composite|merge:0+2": 2,
+      "q3:x2|merge:0+1": 2,
+      "kmeans:3|merge:1+2": 1,
+      "q2:composite": 1,
+      "q3:x3|merge:1+2": 3,
+      "q3:x1|merge:0+2": 2,
+      "q2:x2": 2
+    },
+    "candidate_refit_rejections": {
+      "runs_with_rejections": 0,
+      "total_rejected_candidate_evaluations": 0
+    }
+  },
+  "entity_fingerprint::interpolation": {
+    "oracle_micro_r2": {
+      "n": 0,
+      "mean": null,
+      "mc_se": null
+    },
+    "macro_minus_oracle_micro": {
+      "n": 0,
+      "mean": null,
+      "mc_se": null
+    },
+    "failure_reasons": {},
+    "selected_recipe_counts": {
+      "q2:composite": 2,
+      "kmeans:3|merge:0+2": 2,
+      "q3:x3|merge:0+2": 1,
+      "q3:composite|merge:0+2": 3,
+      "q2:x1": 4,
+      "q3:composite|merge:0+1": 2,
+      "q2:x2": 3,
+      "q3:x2|merge:0+2": 2,
+      "q3:x1|merge:1+2": 2,
+      "kmeans:3|merge:0+1": 3,
+      "q3:x3|merge:0+1": 1,
+      "kmeans:2": 3,
+      "q3:x2|merge:1+2": 1,
+      "kmeans:3|merge:1+2": 1,
+      "q3:x1|merge:0+2": 1,
+      "q3:composite|merge:1+2": 1
+    },
+    "candidate_refit_rejections": {
+      "runs_with_rejections": 0,
+      "total_rejected_candidate_evaluations": 0
+    }
+  },
+  "iid_null::entity_holdout": {
+    "oracle_micro_r2": {
+      "n": 0,
+      "mean": null,
+      "mc_se": null
+    },
+    "macro_minus_oracle_micro": {
+      "n": 0,
+      "mean": null,
+      "mc_se": null
+    },
+    "failure_reasons": {},
+    "selected_recipe_counts": {
+      "q3:composite|merge:0+1": 2,
+      "q2:x2": 1,
+      "q3:x1|merge:0+1": 2,
+      "kmeans:3|merge:0+2": 3,
+      "q3:x1|merge:0+2": 1,
+      "q3:x2|merge:0+1": 5,
+      "q3:x2|merge:1+2": 3,
+      "q3:composite|merge:1+2": 3,
+      "q3:x3|merge:0+2": 1,
+      "kmeans:2": 1,
+      "q2:x1": 1,
+      "q3:composite|merge:0+2": 1,
+      "kmeans:3|merge:1+2": 1,
+      "q3:x2|merge:0+2": 3,
+      "kmeans:3|merge:0+1": 1,
+      "q2:composite": 1,
+      "q3:x3|merge:0+1": 1,
+      "q3:x3|merge:1+2": 1
+    },
+    "candidate_refit_rejections": {
+      "runs_with_rejections": 0,
+      "total_rejected_candidate_evaluations": 0
+    }
+  },
+  "known_confounding::entity_holdout": {
+    "oracle_micro_r2": {
+      "n": 0,
+      "mean": null,
+      "mc_se": null
+    },
+    "macro_minus_oracle_micro": {
+      "n": 0,
+      "mean": null,
+      "mc_se": null
+    },
+    "failure_reasons": {},
+    "joint_raw_confounder": {
+      "treatment": {
+        "n": 32,
+        "mean": 1.5050388006419848,
+        "mc_se": 0.013080676777657882
+      },
+      "u": {
+        "n": 32,
+        "mean": 3.9959371401289987,
+        "mc_se": 0.015547411798170836
+      }
+    },
+    "coarse_macro_adjusted": {
+      "treatment": {
+        "n": 32,
+        "mean": 3.3337217485866915,
+        "mc_se": 0.018934274873142084
+      }
+    },
+    "package_native_joint_coefficients": {
+      "treatment": {
+        "n": 32,
+        "mean": 1.5050388006419848,
+        "mc_se": 0.01308067677765789
+      }
+    },
+    "package_native_joint_validation_count": 32,
+    "selected_recipe_counts": {
+      "q3:u": 32
+    },
+    "candidate_refit_rejections": {
+      "runs_with_rejections": 0,
+      "total_rejected_candidate_evaluations": 0
+    }
+  },
+  "nonlinear_threshold::entity_holdout": {
+    "oracle_micro_r2": {
+      "n": 32,
+      "mean": 0.48604125411322496,
+      "mc_se": 0.007819999207013036
+    },
+    "macro_minus_oracle_micro": {
+      "n": 32,
+      "mean": -0.03995104435638752,
+      "mc_se": 0.006746808674411294
+    },
+    "failure_reasons": {},
+    "selected_recipe_counts": {
+      "q2:x1": 32
+    },
+    "candidate_refit_rejections": {
+      "runs_with_rejections": 0,
+      "total_rejected_candidate_evaluations": 0
+    }
+  },
+  "population_shift::forward_time": {
+    "oracle_micro_r2": {
+      "n": 0,
+      "mean": null,
+      "mc_se": null
+    },
+    "macro_minus_oracle_micro": {
+      "n": 0,
+      "mean": null,
+      "mc_se": null
+    },
+    "failure_reasons": {},
+    "selected_recipe_counts": {
+      "q3:x1": 32
+    },
+    "candidate_refit_rejections": {
+      "runs_with_rejections": 0,
+      "total_rejected_candidate_evaluations": 0
+    }
+  },
+  "rare_absent_states::entity_holdout": {
+    "oracle_micro_r2": {
+      "n": 0,
+      "mean": null,
+      "mc_se": null
+    },
+    "macro_minus_oracle_micro": {
+      "n": 0,
+      "mean": null,
+      "mc_se": null
+    },
+    "failure_reasons": {},
+    "selected_recipe_counts": {
+      "q3:x1": 25,
+      "q3:x1|merge:0+1": 3,
+      "q3:x1|merge:1+2": 1,
+      "q2:x1": 3
+    },
+    "candidate_refit_rejections": {
+      "runs_with_rejections": 0,
+      "total_rejected_candidate_evaluations": 0
+    },
+    "raw_absent_state_support": [
+      {
+        "seed": 1215576718,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 2289888945,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 2824521637,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 3702321507,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 3190864078,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 4191633821,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 4247781974,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 256953685,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 2197866403,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 1474614731,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 3657832404,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 260178420,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 3033105604,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 1793302441,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 3920212888,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 3386211455,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 1581782512,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 1841691452,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 4010831123,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 429630676,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 3013569882,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 2915000072,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 526086146,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 1845120572,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 3607299198,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 4202403413,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 2165967813,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 1467257532,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 4141248858,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 1981799061,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 1143655493,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      },
+      {
+        "seed": 3688059804,
+        "rare_entity_state": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 15,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "rare_tail_state": [
+          {
+            "state": "0",
+            "test_entities": 12,
+            "test_rows": 179,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "1",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ],
+        "prespecified_states": [
+          {
+            "state": "0",
+            "test_entities": 11,
+            "test_rows": 165,
+            "train_entities": 36,
+            "train_rows": 540
+          },
+          {
+            "state": "2",
+            "test_entities": 1,
+            "test_rows": 14,
+            "train_entities": 0,
+            "train_rows": 0
+          },
+          {
+            "state": "3",
+            "test_entities": 1,
+            "test_rows": 1,
+            "train_entities": 0,
+            "train_rows": 0
+          }
+        ]
+      }
+    ]
+  },
+  "sign_interaction::entity_holdout": {
+    "oracle_micro_r2": {
+      "n": 32,
+      "mean": 0.6853159943143194,
+      "mc_se": 0.004613856290299469
+    },
+    "macro_minus_oracle_micro": {
+      "n": 32,
+      "mean": -0.6613289581977457,
+      "mc_se": 0.006390567984017015
+    },
+    "failure_reasons": {},
+    "selected_recipe_counts": {
+      "q3:composite|merge:0+2": 16,
+      "kmeans:3|merge:1+2": 4,
+      "kmeans:3|merge:0+1": 8,
+      "q3:composite|merge:0+1": 1,
+      "kmeans:3": 1,
+      "kmeans:3|merge:0+2": 1,
+      "q3:composite|merge:1+2": 1
+    },
+    "candidate_refit_rejections": {
+      "runs_with_rejections": 0,
+      "total_rejected_candidate_evaluations": 0
+    }
+  },
+  "temporal_drift::forward_time": {
+    "oracle_micro_r2": {
+      "n": 0,
+      "mean": null,
+      "mc_se": null
+    },
+    "macro_minus_oracle_micro": {
+      "n": 0,
+      "mean": null,
+      "mc_se": null
+    },
+    "failure_reasons": {},
+    "selected_recipe_counts": {
+      "q3:x1": 32
+    },
+    "candidate_refit_rejections": {
+      "runs_with_rejections": 0,
+      "total_rejected_candidate_evaluations": 0
+    }
+  },
+  "temporal_drift::interpolation": {
+    "oracle_micro_r2": {
+      "n": 0,
+      "mean": null,
+      "mc_se": null
+    },
+    "macro_minus_oracle_micro": {
+      "n": 0,
+      "mean": null,
+      "mc_se": null
+    },
+    "failure_reasons": {},
+    "selected_recipe_counts": {
+      "q3:x3|merge:0+2": 5,
+      "q3:x1|merge:0+2": 3,
+      "q3:composite|merge:1+2": 1,
+      "q3:composite|merge:0+2": 3,
+      "q3:x3|merge:0+1": 4,
+      "q3:x2|merge:1+2": 5,
+      "kmeans:3|merge:0+1": 1,
+      "q2:x3": 1,
+      "q3:x2|merge:0+1": 3,
+      "q2:x2": 1,
+      "q3:x2|merge:0+2": 3,
+      "kmeans:3|merge:0+2": 1,
+      "q3:x3|merge:1+2": 1
+    },
+    "candidate_refit_rejections": {
+      "runs_with_rejections": 0,
+      "total_rejected_candidate_evaluations": 0
+    }
+  }
+}

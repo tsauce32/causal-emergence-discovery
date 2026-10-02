@@ -1,0 +1,35 @@
+{
+  "checked_utc": "2026-10-02T15:14:51.382151+00:00",
+  "preserved": true,
+  "checks": {
+    "reviewed_validation_head": true,
+    "reviewed_validation_status": true,
+    "reviewed_scoring_head": true,
+    "reviewed_scoring_status": true,
+    "reviewed_patch_sha256": true,
+    "original_review_sha256": true,
+    "original_manifest_sha256": true,
+    "scoring_staged_patch_matches_reviewed_patch": true
+  },
+  "after": {
+    "reviewed_validation_head": "5d6ab966deba6c705f4a869006b19b73736c9824",
+    "reviewed_validation_status": [],
+    "reviewed_scoring_head": "22538091e1b44941ee750e96c5d8afe048fe9ae0",
+    "reviewed_scoring_status": [
+      "M  README.md",
+      "M  docs/design.md",
+      "M  pyproject.toml",
+      "M  src/causal_emergence_discovery/cli.py",
+      "M  src/causal_emergence_discovery/discovery.py",
+      "M  src/causal_emergence_discovery/scoring.py",
+      "M  src/causal_emergence_discovery/search.py",
+      "M  tests/test_discovery.py",
+      "A  tests/test_score_output.py",
+      "A  tests/test_scoring.py"
+    ],
+    "reviewed_patch_sha256": "D1A989C26F7282E69EFFAF25B221285BB59D0488A1E2C677D50475B9D2006F13",
+    "original_review_sha256": "58650A018B2AC8B11283ACC46C30FED8A0F4D880614300A771DFCAFD4D6E803F",
+    "original_manifest_sha256": "6A8D7486A2A06D101BE27AB2047BB4CBFB7C61C917F785F9D70E6AA2DCD5CB07"
+  },
+  "current_staged_patch_sha256": "D1A989C26F7282E69EFFAF25B221285BB59D0488A1E2C677D50475B9D2006F13"
+}

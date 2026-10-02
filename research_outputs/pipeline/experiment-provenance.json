@@ -1,0 +1,172 @@
+{
+  "source_commit": "735c6a8fa1111e2ac53026ec3cbe2c23e5f5625d",
+  "source_verified_at_end": {
+    "expected_commit": "735c6a8fa1111e2ac53026ec3cbe2c23e5f5625d",
+    "head": "735c6a8fa1111e2ac53026ec3cbe2c23e5f5625d",
+    "relevant_source_clean": true,
+    "relevant_status": "",
+    "source": "C:\\Users\\Owner\\Documents\\ChatGPT\\Causal Emergence\\work\\discovery-integrated"
+  },
+  "fit_harness": {
+    "file_sha256": {
+      "benchmarks/pipeline/PROTOCOL.md": "4eebdb066e3954290785455066be228df898681dc0ebe7967a05b1c28a194254",
+      "benchmarks/pipeline/baselines.py": "355de92adcf3c2ee28a2a7bca7115291d330135de7ca28953430162a1f039d53",
+      "benchmarks/pipeline/dgps.py": "df52f739186d9c52f609846a3fd7ad504f8b693a017c8e799790372e451ea518",
+      "benchmarks/pipeline/protocol.py": "acbbd818d93355683e76af50704cad40bc7c6afbd6ec2a9f97a133b52ec53540",
+      "benchmarks/pipeline/runner.py": "fecb9a98eb45cc758d22bf31468979012371e9b8781d37d7fcf0d51f8ac93617"
+    },
+    "head": "8473ec011ba76940f8e2da170f5043dc5991f1ef"
+  },
+  "protocol_sha256": "5edef37fb1f8dca8ed81e16ea8d832d931911d9d6157e1e280d81110e8637257",
+  "seed_family": 20261002,
+  "seeds": [
+    1215576718,
+    2289888945,
+    2824521637,
+    3702321507,
+    3190864078,
+    4191633821,
+    4247781974,
+    256953685,
+    2197866403,
+    1474614731,
+    3657832404,
+    260178420,
+    3033105604,
+    1793302441,
+    3920212888,
+    3386211455,
+    1581782512,
+    1841691452,
+    4010831123,
+    429630676,
+    3013569882,
+    2915000072,
+    526086146,
+    1845120572,
+    3607299198,
+    4202403413,
+    2165967813,
+    1467257532,
+    4141248858,
+    1981799061,
+    1143655493,
+    3688059804
+  ],
+  "full_runs": {
+    "planned": 384,
+    "successful": 384,
+    "failed": 0
+  },
+  "benchmark_tests": {
+    "passed": 61,
+    "failed": 0,
+    "skipped": 0
+  },
+  "native_joint_coefficient_checks_passed": 64,
+  "native_treatment_coefficients_verified": 96,
+  "package_outer_score_checks_passed": 768,
+  "maximum_package_outer_score_error": 3.552713678800501e-15,
+  "maximum_macro_matched_micro_r2_difference": 0.0,
+  "numerical_audit": {
+    "passed": true,
+    "planned_trials": 384,
+    "observed_trials": 384,
+    "independently_recomputed_numerical_summaries": 132,
+    "failed_trials": 0,
+    "scope": "raw means, paired differences, Monte Carlo SEs, trial identities and denominators"
+  },
+  "scientific_review": "independently_reviewed_descriptive_simulation",
+  "reviewed_source_and_evidence_preserved": true,
+  "scope": "Selection-aware predictive benchmark and constructed-SCM software controls; emergence not_assessed",
+  "source_artifacts": {
+    "NUMERICAL_RESULTS.md": {
+      "sha256": "3c88e9110619bd2f5c4e0a3540ea13a6c120c6e891a65ddda479330b5bcdcd38",
+      "bytes": 3458
+    },
+    "full-results.csv": {
+      "sha256": "42e50fbe6d8a43ece8e5c605808617a1f73999441b3813fe8c477a17640b94a0",
+      "bytes": 3625
+    },
+    "secondary-controls.json": {
+      "sha256": "b76293870cd62dc399ff844af44751357e4c0092cc0bfa8540decf58476ec0ed",
+      "bytes": 55736
+    },
+    "independent-numerical-audit.json": {
+      "sha256": "b409ce95e501bd72bdb6a71074230bed6c37a92e4dae5e10aed9a5e58f0bbbfe",
+      "bytes": 253
+    },
+    "full-profile-frozen.json": {
+      "sha256": "2f52a7d91bd6924b0b54159d63808e6fc868d0161016c5c94cc3200a668cc535",
+      "bytes": 2751
+    },
+    "full-profile-frozen-final.json": {
+      "sha256": "888a63e08fefc5cc439554045f271ffbfdc446d224356776878205756c893764",
+      "bytes": 3037
+    },
+    "design-amendment-conditional-treatments.json": {
+      "sha256": "7c97a733efa9847fe44b89ae123498da12d017d0811783496a98737e1813b7e1",
+      "bytes": 973
+    },
+    "integrated-source-readiness.json": {
+      "sha256": "2452c32106ffd00b06f52d23a8db5dde1e5499082956358bdef90d94ec529e38",
+      "bytes": 7119
+    },
+    "preservation-after.json": {
+      "sha256": "b6c3967e4c32d89aa141806bdaf9392594c4136c00353822445e25486bba9fa3",
+      "bytes": 1483
+    },
+    "final-integrated-benchmark-tests.txt": {
+      "sha256": "ce9233f4e4559090497c13c0e7f9d5d6b8676c7dfc25791d523540e6b7eaeca2",
+      "bytes": 101
+    },
+    "quick-integrated-validation.json": {
+      "sha256": "f0e585700de861d20f0f2c6c9e1c2ed5ad0d78204d8ba660464006eeb669d8a2",
+      "bytes": 321
+    },
+    "full/manifest.json": {
+      "sha256": "1026689a189271e479c444ebd743ddf5786b436ffbd1cfdd2442c50a2b512acb",
+      "bytes": 3926
+    },
+    "full/summary.json": {
+      "sha256": "2ded8bbdae6f6c522d12f7e25d27784cba3f27d7d9d1ccbdf0fdbc549d907f96",
+      "bytes": 169075
+    },
+    "IMPLEMENTATION.md": {
+      "sha256": "51c456dba5cba1d14c9773b5829c25eaa703067df0898943919e1f3a563e8cec",
+      "bytes": 12040
+    },
+    "scientific-review.md": {
+      "sha256": "3be0b047da2a76b8ff174ff7477b7ba50e457f06394a278a83a75603a5f1638e",
+      "bytes": 8024
+    },
+    "scientific-review-audit.json": {
+      "sha256": "5624f1995368f4f41465af4946509ead7fb4a27f3c129b0b59155b34fcaea451",
+      "bytes": 7727
+    }
+  },
+  "compact_artifact_sha256": {
+    "NUMERICAL_RESULTS.md": "6fcf53526bcf0086498eadaa8bcec3e9a193cb8e8dcff87637fa2638c62c6e8f",
+    "full-results.csv": "e294e58c6b63416245412b163f58067262a319f654f25f473a44f3f06dc7f9e4",
+    "secondary-controls.json": "86bd5c7b2fa34fad90fc850f2316ff0d397240da7649b494cbcb70b520120725",
+    "independent-numerical-audit.json": "23ac227e820391b4a54c6f0f685334ea2ddb8f7b027ba9df6b96c53abd5ee487",
+    "full-profile-frozen.json": "f404a14b4b3820ec4651f358c65cc544079febb287580c5df46186c35a03e83d",
+    "full-profile-frozen-final.json": "413c020a278a3f678081d8e7c4b8995d4cdc3ae941ca674c3ef87e18a2cf6489",
+    "design-amendment-conditional-treatments.json": "b2e66b1d94b00a52859a1a4cdc990d35cb37996af8b4eb4e4fbb8ac1a970b852",
+    "integrated-source-readiness.json": "9525919b336ef07dddb05238f1b21cca2b4c46b3b8b39f33aefb47f046eea457",
+    "preservation.json": "0fb8b7b5f6e9920891ca6b04d864284482582bfa60f7082e341f0600a7e3e1ae",
+    "benchmark-tests.txt": "9c8393b58d70337924f77b195774ef483e27cc774329860bdd69a1b156f7f67a",
+    "quick-validation.json": "ed21de19141c302eece6f5be1bfc52e1d16e8162240dbe7bdd489f5ab4fb12fa",
+    "experiment-manifest.json": "d42dc5e0fa69ea9e66912c6fc63a53f7d443d47f0f81c5ebb2689a21453bdd44",
+    "full-summary.json": "1b08dc7fe1e537be01d52fc15d927d42915ff79bb2f134ec7b6d456586ee146b",
+    "IMPLEMENTATION.md": "d6238b9ad4fa7ba6eb53c83bc2ab0631cd8165d486fdd5b966e8f527aec9a66a",
+    "scientific-review.md": "4e6a9c8ce75daab88eb3717ab8eb3fca34194c35aef92aeff825cf7c7a7518b4",
+    "scientific-review-audit.json": "5be42a35570da059b6efbace321e31470932efa0fe108228be1e4153304caa87"
+  },
+  "compact_text_normalization": "LF newlines and one final newline; source_artifacts retain original research byte hashes",
+  "raw_trials": {
+    "path": "C:\\Users\\Owner\\Documents\\ChatGPT\\Causal Emergence\\research\\discovery-pipeline-benchmark\\full\\trials.jsonl",
+    "sha256": "2a58b48552ec41fbe9518afd8d590c7addf6c7ad4c0c08aacf8ff8642c81a488",
+    "bytes": 3052756
+  }
+}

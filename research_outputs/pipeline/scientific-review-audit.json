@@ -1,0 +1,265 @@
+{
+  "result_status": "independently_reviewed_descriptive_simulation",
+  "support": {
+    "selected_macro_states_below_20_rows_or_5_entities": 0,
+    "rare_entity_test_support": "one held-out entity and 15 rows per replicate",
+    "rare_tail_test_support": "one valid held-out transition row per replicate",
+    "generator_rare_entity_absent_from_development_replicates": 32,
+    "generator_rare_tail_absent_from_development_replicates": 32,
+    "selected_recipe_support_does_not_imply_true_rare_state_recovery": true
+  },
+  "matched_basis": {
+    "runs": 384,
+    "interpretation": "Expected representational equivalence check, not independent evidence.",
+    "max_abs_r2_difference": 0.0
+  },
+  "primary_comparison": "selected macro held-out R2 minus restricted linear micro held-out R2",
+  "freeze": {
+    "observed_trials": 384,
+    "protocol": "full-profile-frozen-final.json",
+    "dgp_sha256": "df52f739186d9c52f609846a3fd7ad504f8b693a017c8e799790372e451ea518",
+    "failed_or_unsupported": 0,
+    "replacement_seeds": false,
+    "missing": 0,
+    "dgp_hash_matches_freeze": true,
+    "unique_trial_identities": 384,
+    "all_success": true,
+    "planned_trials": 384,
+    "seed_manifest_matches_freeze": true
+  },
+  "source": {
+    "relevant_source_clean": true,
+    "commit": "735c6a8fa1111e2ac53026ec3cbe2c23e5f5625d"
+  },
+  "test_evidence": {
+    "skipped": 0,
+    "benchmark_tests_passed": 61,
+    "integrated_source_adversarial_tests_passed": 4
+  },
+  "cells": [
+    {
+      "mc_se": 0.0020970582351742513,
+      "n": 32,
+      "selected_families": {
+        "kmeans": 6,
+        "q3": 23,
+        "q2": 3
+      },
+      "mean_delta_r2": 0.0017288436961705074,
+      "cell": "iid_null::entity_holdout",
+      "ci95_t": [
+        -0.0025479511955407343,
+        0.006005638587881749
+      ],
+      "positive": 16
+    },
+    {
+      "mc_se": 0.008472127861416625,
+      "n": 32,
+      "selected_families": {
+        "q3": 32
+      },
+      "mean_delta_r2": -0.28804708823300096,
+      "cell": "additive_signal::entity_holdout",
+      "ci95_t": [
+        -0.3053253652745636,
+        -0.2707688111914383
+      ],
+      "positive": 0
+    },
+    {
+      "mc_se": 0.00961001911452365,
+      "n": 32,
+      "selected_families": {
+        "q2": 32
+      },
+      "mean_delta_r2": 0.13557923655690649,
+      "cell": "nonlinear_threshold::entity_holdout",
+      "ci95_t": [
+        0.1159803146152719,
+        0.15517815849854108
+      ],
+      "positive": 31
+    },
+    {
+      "mc_se": 0.005976889090382108,
+      "n": 32,
+      "selected_families": {
+        "kmeans": 14,
+        "q3": 18
+      },
+      "mean_delta_r2": 0.037631397434158546,
+      "cell": "sign_interaction::entity_holdout",
+      "ci95_t": [
+        0.02544197498450167,
+        0.049820819883815426
+      ],
+      "positive": 27
+    },
+    {
+      "n": 32,
+      "cell": "entity_fingerprint::entity_holdout",
+      "interpretation": "Unsupported unseen-category reference-level extrapolation artifact; not a Discovery transfer advantage.",
+      "mean_delta_r2": 1.471942118240101,
+      "selected_families": {
+        "kmeans": 5,
+        "q3": 24,
+        "q2": 3
+      },
+      "mc_se": 0.44093170566332307,
+      "positive": 28,
+      "ci95_t": [
+        0.5726945748271114,
+        2.3711896616530903
+      ]
+    },
+    {
+      "mc_se": 0.009369100352323873,
+      "n": 32,
+      "selected_families": {
+        "kmeans": 9,
+        "q3": 14,
+        "q2": 9
+      },
+      "mean_delta_r2": -0.7579922880910885,
+      "cell": "entity_fingerprint::interpolation",
+      "ci95_t": [
+        -0.7770998740677932,
+        -0.7388847021143838
+      ],
+      "positive": 0
+    },
+    {
+      "n": 32,
+      "cell": "temporal_drift::forward_time",
+      "interpretation": "Relative improvement while mean R2 remains negative for both macro and restricted micro.",
+      "mean_delta_r2": 0.43298686413997833,
+      "selected_families": {
+        "q3": 32
+      },
+      "mc_se": 0.02207687727218978,
+      "positive": 32,
+      "ci95_t": [
+        0.3879627087021625,
+        0.4780110195777942
+      ]
+    },
+    {
+      "mc_se": 0.015576169320082225,
+      "n": 32,
+      "selected_families": {
+        "kmeans": 2,
+        "q3": 28,
+        "q2": 2
+      },
+      "mean_delta_r2": -0.15841729862589674,
+      "cell": "temporal_drift::interpolation",
+      "ci95_t": [
+        -0.19018374185727493,
+        -0.12665085539451854
+      ],
+      "positive": 2
+    },
+    {
+      "mc_se": 0.005623038647888245,
+      "n": 32,
+      "selected_families": {
+        "q3": 29,
+        "q2": 3
+      },
+      "mean_delta_r2": -0.04816766843967822,
+      "cell": "rare_absent_states::entity_holdout",
+      "ci95_t": [
+        -0.05963543912997813,
+        -0.03669989774937831
+      ],
+      "positive": 2
+    },
+    {
+      "mc_se": 0.0014994301507435122,
+      "n": 32,
+      "selected_families": {
+        "q3": 32
+      },
+      "mean_delta_r2": -0.05889149735318291,
+      "cell": "known_confounding::entity_holdout",
+      "ci95_t": [
+        -0.06194947404720868,
+        -0.055833520659157136
+      ],
+      "positive": 0
+    },
+    {
+      "mc_se": 0.0016678592953419463,
+      "n": 32,
+      "selected_families": {
+        "q3": 32
+      },
+      "mean_delta_r2": -0.028400143794947156,
+      "cell": "correlated_treatments::entity_holdout",
+      "ci95_t": [
+        -0.03180161924983305,
+        -0.024998668340061262
+      ],
+      "positive": 0
+    },
+    {
+      "mc_se": 0.01571759373575888,
+      "n": 32,
+      "selected_families": {
+        "q3": 32
+      },
+      "mean_delta_r2": -0.6324365837273179,
+      "cell": "population_shift::forward_time",
+      "ci95_t": [
+        -0.6644914515758021,
+        -0.6003817158788337
+      ],
+      "positive": 0
+    }
+  ],
+  "review_schema_version": 1,
+  "native_adjustment": {
+    "max_abs_coefficient_difference": 9.325873406851315E-15,
+    "estimand": "joint_conditional",
+    "validated": 64,
+    "causal_identification_claim": false,
+    "run_checks": 64,
+    "pathways": 96
+  },
+  "evidence_files": [
+    "full/manifest.json",
+    "full/trials.jsonl",
+    "full/summary.json",
+    "NUMERICAL_RESULTS.md",
+    "full-results.csv",
+    "secondary-controls.json",
+    "independent-numerical-audit.json",
+    "scientific-review.md"
+  ],
+  "interpretation_limits": [
+    "No calibrated rejection rule or full-search empirical false-positive-rate claim.",
+    "No power, sensitivity, detection, or interval-coverage claim for the full search.",
+    "No causal emergence, Hoel, CE2, or real-world causal identification claim.",
+    "Per-cell intervals are not simultaneous; replicates/cells are not all mutually independent because seed families and some generated panels are reused.",
+    "Entity-fingerprint entity-holdout contrast is dominated by unsupported reference-level extrapolation for unseen arbitrary entity effects."
+  ],
+  "independent_raw_audit": {
+    "all_paired_delta_n": 32,
+    "summary_means_mcse_denominators_match": true,
+    "all_cell_comparator_n": 32,
+    "recomputed_score_and_paired_summaries": 132
+  },
+  "harness_commit": "8473ec011ba76940f8e2da170f5043dc5991f1ef",
+  "bootstrap": {
+    "coverage_claim": "low-precision descriptive only; not nominal coverage validation",
+    "model": "prespecified raw-U adjusted entity bootstrap",
+    "panels": 32,
+    "wilson95": [
+      0.8425573617998744,
+      0.9944621398359969
+    ],
+    "known_confounding_coverage": 31
+  },
+  "outer_metric_reproductions": 768
+}

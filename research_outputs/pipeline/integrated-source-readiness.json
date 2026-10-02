@@ -1,0 +1,156 @@
+{
+  "ready_for_integration": true,
+  "phase": "combined_acceptance_complete",
+  "date": "2026-10-02",
+  "timezone": "America/New_York",
+  "source_base": "5d6ab966deba6c705f4a869006b19b73736c9824",
+  "scoring_source_base": "22538091e1b44941ee750e96c5d8afe048fe9ae0",
+  "scoring_reviewed_patch": "C:\\Users\\Owner\\Documents\\ChatGPT\\Causal Emergence\\research\\discovery-review-2026-10-02\\scoring-reviewed.patch",
+  "scoring_reviewed_patch_sha256": "d1a989c26f7282e69effaf25b221285bb59d0488a1e2c677d50475b9d2006f13",
+  "checkout": "C:\\Users\\Owner\\Documents\\ChatGPT\\Causal Emergence\\work\\discovery-integrated",
+  "branch": "codex/discovery-integrated",
+  "commit": "735c6a8fa1111e2ac53026ec3cbe2c23e5f5625d",
+  "package_version": "0.2.0",
+  "schema_version": 2,
+  "patch_path": "C:\\Users\\Owner\\Documents\\ChatGPT\\Causal Emergence\\research\\discovery-integrated\\discovery-integrated.patch",
+  "patch_sha256": "52aafe6916ab71d2bfb1d7f43cd9b657d971c3e1e1499f7e33c17e0ce657d5f9",
+  "consumed_fixes": [
+    {
+      "workstream": "discovery-regression-fix",
+      "commit": "0539cc80ed91609461728c0125871cfbe6d14928",
+      "source_base": "5d6ab966deba6c705f4a869006b19b73736c9824",
+      "patch_path": "C:\\Users\\Owner\\Documents\\ChatGPT\\Causal Emergence\\research\\discovery-regression-fix\\regression-fix.patch",
+      "patch_sha256": "2732ad49646212332086a21579f1ef774f42277ae62ff387f3c9961db2b65beb",
+      "ready_manifest": "C:\\Users\\Owner\\Documents\\ChatGPT\\Causal Emergence\\research\\discovery-regression-fix\\status.json"
+    },
+    {
+      "workstream": "discovery-merge-fix",
+      "commit": "35309f576018daa24111bac9f29d37f33ab8c1a0",
+      "source_base": "5d6ab966deba6c705f4a869006b19b73736c9824",
+      "patch_path": "C:\\Users\\Owner\\Documents\\ChatGPT\\Causal Emergence\\research\\discovery-merge-fix\\macro-refit.patch",
+      "patch_sha256": "2b404d38ffa3c0ad862183bb4c5fff19460a133e7dcefd50edd16b0fd4da213a",
+      "ready_manifest": "C:\\Users\\Owner\\Documents\\ChatGPT\\Causal Emergence\\research\\discovery-merge-fix\\status.json"
+    },
+    {
+      "workstream": "discovery-holdout-fix",
+      "commit": "040f484e9d6f9289ebb3a96423cec998cb7200b2",
+      "source_base": "5d6ab966deba6c705f4a869006b19b73736c9824",
+      "patch_path": "C:\\Users\\Owner\\Documents\\ChatGPT\\Causal Emergence\\research\\discovery-holdout-fix\\holdout-isolation.patch",
+      "patch_sha256": "8b7662a1027af2c347e8d4eac91c2de27876c0dcdeb4ab9415deed4c94ebeddf",
+      "ready_manifest": "C:\\Users\\Owner\\Documents\\ChatGPT\\Causal Emergence\\research\\discovery-holdout-fix\\status.json"
+    }
+  ],
+  "pending_fixes": [],
+  "changed_files": [
+    ".gitignore",
+    "README.md",
+    "docs/design.md",
+    "docs/validation.md",
+    "packaging/run_acceptance.ps1",
+    "pyproject.toml",
+    "src/causal_emergence_discovery/__init__.py",
+    "src/causal_emergence_discovery/adjustment.py",
+    "src/causal_emergence_discovery/cli.py",
+    "src/causal_emergence_discovery/discovery.py",
+    "src/causal_emergence_discovery/macro.py",
+    "src/causal_emergence_discovery/models.py",
+    "src/causal_emergence_discovery/panel.py",
+    "src/causal_emergence_discovery/schema.py",
+    "src/causal_emergence_discovery/scoring.py",
+    "src/causal_emergence_discovery/search.py",
+    "src/causal_emergence_discovery/spec.py",
+    "src/causal_emergence_discovery/validation.py",
+    "tests/test_adjustment_api.py",
+    "tests/test_adjustment_estimands.py",
+    "tests/test_csv_schema.py",
+    "tests/test_discovery.py",
+    "tests/test_encoders_adjustment.py",
+    "tests/test_feature_schema.py",
+    "tests/test_holdout_api.py",
+    "tests/test_holdout_cli.py",
+    "tests/test_integration_science.py",
+    "tests/test_locked_cohort.py",
+    "tests/test_macro_recipe_compatibility.py",
+    "tests/test_macro_refit_adversarial.py",
+    "tests/test_macro_refit_api.py",
+    "tests/test_macro_refit_controls.py",
+    "tests/test_outer_contract.py",
+    "tests/test_package_acceptance.py",
+    "tests/test_regression_integration.py",
+    "tests/test_regression_rank.py",
+    "tests/test_score_output.py",
+    "tests/test_scoring.py",
+    "tests/test_scoring_integration.py"
+  ],
+  "test_results": {
+    "source": {
+      "status": "passed",
+      "tests": 168,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 168,
+      "elapsed_seconds": 56.996,
+      "junit": "C:\\Users\\Owner\\Documents\\ChatGPT\\Causal Emergence\\research\\discovery-integrated\\pytest-final.xml",
+      "junit_sha256": "ed0ef158b53fdddcb2ca74735a96ddbf712a19d1bb8b3d2eb684e7756fc6db72"
+    },
+    "installed_package": {
+      "status": "passed",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 2,
+      "elapsed_seconds": 20.158,
+      "junit": "C:\\Users\\Owner\\Documents\\ChatGPT\\Causal Emergence\\work\\discovery-integrated\\packaging\\artifacts\\package-acceptance.xml",
+      "junit_sha256": "64055dce989cbaafe1fef8acf52b0a0b0b80222af8a7c659e121b41c33702eae"
+    },
+    "total_passed": 170
+  },
+  "runtime": {
+    "python_executable": "C:\\Users\\Owner\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+    "python": "3.12.14",
+    "numpy": "2.3.5",
+    "pandas": "3.0.1",
+    "pytest": "9.1.1",
+    "dependency_root": "C:\\Users\\Owner\\Documents\\ChatGPT\\Causal Emergence\\research\\review_dependencies"
+  },
+  "experiments": [
+    {
+      "path": "C:\\Users\\Owner\\Documents\\ChatGPT\\Causal Emergence\\research\\discovery-integrated\\scientific-controls.generated.json",
+      "sha256": "0ba8a808ac9237278e32099211352b76728efb4808a8bc67ca3d83c178ebe376",
+      "status": "completed"
+    },
+    {
+      "path": "C:\\Users\\Owner\\Documents\\ChatGPT\\Causal Emergence\\research\\discovery-integrated\\adjustment-controls.generated.json",
+      "sha256": "57a7a313db8fddacc2575d667eea59c491914262cdbfd815ba2cba5490318a84",
+      "status": "completed"
+    },
+    {
+      "path": "C:\\Users\\Owner\\Documents\\ChatGPT\\Causal Emergence\\research\\discovery-integrated\\validation-controls.generated.json",
+      "sha256": "87a10aca9160e9fb59222d1dea6c869c315d7a4f6b314673d63569ca0209e7da",
+      "status": "completed"
+    }
+  ],
+  "checks": {
+    "portable_patch_tree_verified": true,
+    "git_diff_check": true,
+    "tracked_checkout_clean": true,
+    "reviewed_sources_preserved": true,
+    "packaged_sources_match_final_commit": true
+  },
+  "artifacts": [
+    "IMPLEMENTATION.md",
+    "discovery-integrated.patch",
+    "acceptance-manifest.json",
+    "package-evidence.json",
+    "patch-verification.json",
+    "preservation.json"
+  ],
+  "scientific_limits": [
+    "Heuristic ranking is not an emergence test; evidence remains not_assessed.",
+    "Predictive gaps depend on model classes; coefficients are observational associations.",
+    "Canonical rank recipes do not establish population alignment.",
+    "IID standard errors do not support panel inference."
+  ]
+}
