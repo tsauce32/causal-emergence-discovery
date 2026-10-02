@@ -28,7 +28,7 @@ def test_run_discovery_returns_ranked_macro_hypotheses():
 
     assert result["status"] == "experimental_hypothesis_generation"
     assert result["top_macros"]
-    assert result["top_macros"][0]["score"] > 0.0
+    assert result["top_macros"][0]["ranking_score"] > 0.0
     assert result["top_macros"][0]["state_count"] >= 2
     assert result["candidate_pathways"][0]["intervention"] == "program_hours"
 

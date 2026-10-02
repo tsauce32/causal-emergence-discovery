@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "causal-emergence-discovery"
-version = "0.1.0"
-description = "Discover emergent macro-causal structure in longitudinal tabular data."
+version = "0.2.0"
+description = "Rank candidate macro representations of longitudinal tabular data."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }

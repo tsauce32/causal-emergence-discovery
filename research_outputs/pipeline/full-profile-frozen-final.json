@@ -1,0 +1,118 @@
+{
+  "frozen_utc": "2026-10-02T13:59:37.774007+00:00",
+  "final_outer_results_inspected": false,
+  "protocol": {
+    "protocol_version": "selection-aware-discovery-v1",
+    "name": "full",
+    "seed_family": 20261002,
+    "replicates_per_cell": 32,
+    "n_entities": 48,
+    "n_periods": 16,
+    "inner_folds": 3,
+    "lag": 1,
+    "holdout_fraction": 0.25,
+    "split_seed": 17,
+    "max_states": 3,
+    "candidate_paths": 2,
+    "branching": 2,
+    "min_state_train_rows": 20,
+    "min_state_train_entities": 5,
+    "state_support_threshold_role": "stress_diagnostic_not_universal_validity_rule",
+    "outer_evaluation_per_run": 1,
+    "retry_failed_seed": false,
+    "uncertainty_unit": "independent_complete_pipeline_replicate",
+    "bootstrap_replicates": 1999,
+    "bootstrap_seed": 20261003,
+    "emergence_evidence_status": "not_assessed",
+    "cells": [
+      {
+        "case": "iid_null",
+        "split": "entity_holdout"
+      },
+      {
+        "case": "additive_signal",
+        "split": "entity_holdout"
+      },
+      {
+        "case": "nonlinear_threshold",
+        "split": "entity_holdout"
+      },
+      {
+        "case": "sign_interaction",
+        "split": "entity_holdout"
+      },
+      {
+        "case": "entity_fingerprint",
+        "split": "entity_holdout"
+      },
+      {
+        "case": "entity_fingerprint",
+        "split": "interpolation"
+      },
+      {
+        "case": "temporal_drift",
+        "split": "forward_time"
+      },
+      {
+        "case": "temporal_drift",
+        "split": "interpolation"
+      },
+      {
+        "case": "rare_absent_states",
+        "split": "entity_holdout"
+      },
+      {
+        "case": "known_confounding",
+        "split": "entity_holdout"
+      },
+      {
+        "case": "correlated_treatments",
+        "split": "entity_holdout"
+      },
+      {
+        "case": "population_shift",
+        "split": "forward_time"
+      }
+    ],
+    "planned_runs": 384
+  },
+  "protocol_sha256": "5edef37fb1f8dca8ed81e16ea8d832d931911d9d6157e1e280d81110e8637257",
+  "seeds": [
+    1215576718,
+    2289888945,
+    2824521637,
+    3702321507,
+    3190864078,
+    4191633821,
+    4247781974,
+    256953685,
+    2197866403,
+    1474614731,
+    3657832404,
+    260178420,
+    3033105604,
+    1793302441,
+    3920212888,
+    3386211455,
+    1581782512,
+    1841691452,
+    4010831123,
+    429630676,
+    3013569882,
+    2915000072,
+    526086146,
+    1845120572,
+    3607299198,
+    4202403413,
+    2165967813,
+    1467257532,
+    4141248858,
+    1981799061,
+    1143655493,
+    3688059804
+  ],
+  "dgp_sha256": "df52f739186d9c52f609846a3fd7ad504f8b693a017c8e799790372e451ea518",
+  "final_frozen_utc": "2026-10-02T14:32:39.387957+00:00",
+  "design_amendment": "..\\..\\research\\discovery-pipeline-benchmark\\design-amendment-conditional-treatments.json",
+  "original_freeze_preserved": "..\\..\\research\\discovery-pipeline-benchmark\\full-profile-frozen.json"
+}

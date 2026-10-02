@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "planned_trials": 384,
+  "observed_trials": 384,
+  "independently_recomputed_numerical_summaries": 132,
+  "failed_trials": 0,
+  "scope": "raw means, paired differences, Monte Carlo SEs, trial identities and denominators"
+}

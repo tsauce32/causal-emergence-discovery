@@ -6,6 +6,8 @@ __pycache__/
 .coverage
 dist/
 build/
+packaging/artifacts/
+.pa/
 *.log
 examples/*.generated.csv
 examples/*.generated.json

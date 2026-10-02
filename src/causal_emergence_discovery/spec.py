@@ -79,6 +79,53 @@ class ColumnSpec:
 
 
 @dataclass(frozen=True)
+class AdjustmentSpec:
+    """Explicit covariates, rationale, and treatment-coefficient estimand."""
+
+    columns: tuple[str, ...]
+    rationale: str
+    include_macro: bool = False
+    estimand: str = "joint_conditional"
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.estimand, str) or self.estimand not in {"joint_conditional", "marginal"}:
+            raise ValueError("adjustment.estimand must be 'joint_conditional' or 'marginal'.")
+
+    @classmethod
+    def from_mapping(cls, value: dict[str, Any] | None) -> "AdjustmentSpec | None":
+        if value is None:
+            return None
+        if not isinstance(value, dict):
+            raise ValueError("adjustment must be an object with columns and rationale.")
+        raw_columns = value.get("columns", ())
+        if isinstance(raw_columns, str) or not isinstance(raw_columns, (list, tuple)):
+            raise ValueError("adjustment.columns must be a list of column names.")
+        if any(not isinstance(column, str) or not column.strip() for column in raw_columns):
+            raise ValueError("adjustment.columns must contain non-empty string column names.")
+        columns = tuple(raw_columns)
+        if len(set(columns)) != len(columns):
+            raise ValueError("adjustment.columns must not contain duplicates.")
+        rationale = value.get("rationale")
+        if not isinstance(rationale, str) or not rationale.strip():
+            raise ValueError("An explicit adjustment requires a non-empty rationale.")
+        include_macro = value.get("include_macro", False)
+        if not isinstance(include_macro, bool):
+            raise ValueError("adjustment.include_macro must be a boolean.")
+        estimand = value.get("estimand", "joint_conditional")
+        if not isinstance(estimand, str) or estimand not in {"joint_conditional", "marginal"}:
+            raise ValueError("adjustment.estimand must be 'joint_conditional' or 'marginal'.")
+        return cls(columns=columns, rationale=rationale.strip(), include_macro=include_macro, estimand=estimand)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "columns": list(self.columns),
+            "rationale": self.rationale,
+            "include_macro": self.include_macro,
+            "estimand": self.estimand,
+        }
+
+
+@dataclass(frozen=True)
 class StudySpec:
     """A minimal, domain-agnostic contract for a longitudinal table."""
 
@@ -90,6 +137,7 @@ class StudySpec:
     environments: tuple[str, ...] = ()
     exclude: tuple[str, ...] = ()
     metadata: dict[str, Any] = field(default_factory=dict)
+    adjustment: AdjustmentSpec | None = None
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "StudySpec":
@@ -108,6 +156,7 @@ class StudySpec:
         interventions = tuple(data.get("interventions", ()))
         environments = tuple(data.get("environments", ()))
         exclude = tuple(data.get("exclude", ()))
+        adjustment = AdjustmentSpec.from_mapping(data.get("adjustment"))
 
         columns = _with_role_defaults(columns, outcomes, "outcome")
         columns = _with_role_defaults(columns, interventions, "intervention")
@@ -123,7 +172,56 @@ class StudySpec:
             environments=environments,
             exclude=exclude,
             metadata=data.get("metadata", {}),
+            adjustment=adjustment,
         )
+
+    def __post_init__(self) -> None:
+        if self.adjustment is None:
+            return
+        forbidden = {self.id_column, self.time_column, "__lead_time", *self.outcomes, *self.interventions}
+        forbidden.update(
+            name for name, column in self.columns.items()
+            if column.role in {"outcome", "intervention", "exposure", "exclude"}
+        )
+        invalid = [
+            name for name in self.adjustment.columns
+            if name in forbidden or name.startswith("__lead")
+        ]
+        if invalid:
+            raise ValueError(f"Adjustment columns cannot include identifiers, time, treatments, or outcomes: {invalid}.")
+        excluded = [
+            name for name in self.adjustment.columns
+            if name in self.exclude or self.column_spec(name).role == "exclude"
+        ]
+        if excluded:
+            raise ValueError(f"Excluded columns cannot be adjustment variables: {excluded}.")
+        disallowed = [name for name in self.adjustment.columns if not self.column_spec(name).can_adjust()]
+        if disallowed:
+            raise ValueError(f"Columns marked allowed_as_adjustment=false cannot be adjustment variables: {disallowed}.")
+
+    def to_dict(self) -> dict[str, Any]:
+        result: dict[str, Any] = {
+            "dataset": {"id_column": self.id_column, "time_column": self.time_column},
+            "columns": {
+                name: {
+                    "role": spec.role,
+                    **({"type": spec.variable_type} if spec.variable_type is not None else {}),
+                    **({"tags": list(spec.tags)} if spec.tags else {}),
+                    **({"allowed_as_cause": spec.allowed_as_cause} if spec.allowed_as_cause is not None else {}),
+                    **({"allowed_as_effect": spec.allowed_as_effect} if spec.allowed_as_effect is not None else {}),
+                    **({"allowed_as_adjustment": spec.allowed_as_adjustment} if spec.allowed_as_adjustment is not None else {}),
+                }
+                for name, spec in self.columns.items()
+            },
+            "outcomes": list(self.outcomes),
+            "interventions": list(self.interventions),
+            "environments": list(self.environments),
+            "exclude": list(self.exclude),
+            "metadata": self.metadata,
+        }
+        if self.adjustment is not None:
+            result["adjustment"] = self.adjustment.to_dict()
+        return result
 
     def column_spec(self, name: str) -> ColumnSpec:
         return self.columns.get(name, ColumnSpec(name=name))
