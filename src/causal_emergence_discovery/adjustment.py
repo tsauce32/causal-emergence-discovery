@@ -8,7 +8,6 @@ import numpy as np
 import pandas as pd
 
 from causal_emergence_discovery.macro import MacroAssignment
-from causal_emergence_discovery.models import fit_linear_model
 from causal_emergence_discovery.spec import StudySpec
 
 
@@ -67,16 +66,21 @@ def adjustment_sufficiency_audit(
     *,
     interventions: list[str],
     target_column: str,
+    estimand: str | None = None,
 ) -> dict[str, Any]:
     """Compare exploratory treatment coefficients with declared covariates.
 
-    ``df`` should contain development data only. The comparison is descriptive: OLS
-    coefficients and IID standard errors do not establish exchangeability, correct
-    temporal ordering, absence of selection bias, or a causal effect. A coarse macro
-    is reported as a representation of its source features, not as a substitute for
-    the declared continuous covariates.
+    ``df`` should contain development data only. By default, all declared
+    interventions enter one joint conditional model. ``estimand="marginal"`` fits
+    each intervention separately with the explicit adjustment covariates. When the
+    keyword is omitted, a declared ``adjustment.estimand`` is used if present.
+    Coefficients and IID standard errors are descriptive and do not establish
+    exchangeability, correct temporal ordering, absence of selection bias, or a
+    causal effect. A coarse macro is a representation of its source features, not a
+    substitute for declared continuous covariates.
     """
     resolved = resolve_adjustment(spec, list(df.columns), interventions=interventions, target_column=target_column)
+    effective_estimand = _resolve_estimand(spec, estimand)
     if resolved["include_macro"] and macro is None:
         raise ValueError("adjustment.include_macro=true requires a fitted MacroAssignment for the audit.")
     working = df.copy()
@@ -91,8 +95,8 @@ def adjustment_sufficiency_audit(
     declared_columns = list(resolved["columns"])
     declared_model_adjustments = declared_columns + (macro_covariates if resolved["include_macro"] else [])
 
-    macro_only = _coefficient_comparison(working, interventions, target_column, macro_covariates)
-    declared_fit = _coefficient_comparison(working, interventions, target_column, declared_model_adjustments)
+    macro_only = _coefficient_comparison(working, interventions, target_column, macro_covariates, estimand=effective_estimand)
+    declared_fit = _coefficient_comparison(working, interventions, target_column, declared_model_adjustments, estimand=effective_estimand)
     source_overlap = [column for column in declared_columns if column in macro_features]
     omitted = [column for column in declared_columns if column not in macro_features]
     coarsened = []
@@ -102,28 +106,56 @@ def adjustment_sufficiency_audit(
             if macro.state_count < observed:
                 coarsened.append({"column": column, "observed_values": observed, "macro_states": macro.state_count})
     covariate_residuals = _covariate_residual_diagnostics(working, declared_columns, interventions, macro_column if macro is not None else None)
-    macro_by_intervention = {item["intervention"]: item for item in macro_only}
-    adjusted_by_intervention = {item["intervention"]: item for item in declared_fit}
+    macro_by_term = {(item.get("intervention"), item.get("comparison_term")): item for item in _term_records(macro_only)}
+    adjusted_by_term = {(item.get("intervention"), item.get("comparison_term")): item for item in _term_records(declared_fit)}
     coefficient_changes = []
-    for intervention in interventions:
-        before = macro_by_intervention.get(intervention, {}).get("coefficient")
-        after = adjusted_by_intervention.get(intervention, {}).get("coefficient")
+    for intervention, term in dict.fromkeys([*macro_by_term, *adjusted_by_term]):
+        before = macro_by_term.get((intervention, term), {}).get("coefficient")
+        after = adjusted_by_term.get((intervention, term), {}).get("coefficient")
         coefficient_changes.append({
             "intervention": intervention,
+            "term": term,
+            "term_metadata": {
+                key: source.get(key)
+                for key in ("kind", "level", "reference_level", "feature_name")
+                if (source := adjusted_by_term.get((intervention, term), macro_by_term.get((intervention, term)))) is not None and key in source
+            },
             "macro_only_coefficient": before,
             "declared_adjustment_coefficient": after,
-            "difference_adjusted_minus_macro_only": None if before is None or after is None else float(after) - float(before),
+            "difference_adjusted_minus_macro_only": None if before is None or after is None else _finite_or_none(float(after) - float(before)),
         })
     warnings = [
         "Associational regression diagnostics do not certify causal identification or confounder sufficiency.",
-        "IID standard errors do not account for repeated entities.",
+        "IID standard errors do not account for repeated entities; panel-robust uncertainty is unsupported.",
         "Within-macro residual diagnostics describe remaining information in this development sample; they are not causal tests.",
     ]
     if not resolved["declared"]:
-        warnings.append("No adjustment variables were explicitly declared; reported pathways are unadjusted treatment associations.")
+        warnings.append("No adjustment covariates were explicitly declared; pathways are conditional only on any co-treatments included by the selected estimand.")
     return {
         "target": target_column,
         "interventions": list(interventions),
+        "estimand": effective_estimand,
+        "fit_specification": {
+            "estimand": effective_estimand,
+            "joint_conditional_terms": list(dict.fromkeys([*interventions, *declared_model_adjustments])),
+            "explicit_covariates": declared_columns,
+            "macro_only_covariates": macro_covariates,
+            "declared_fit_covariates": declared_model_adjustments,
+            "marginal_terms_by_intervention": {
+                intervention: list(dict.fromkeys([intervention, *declared_model_adjustments]))
+                for intervention in interventions
+            },
+            "coefficient_interpretation": (
+                "Associational linear-regression coefficients conditional on the listed model terms; "
+                "they do not establish causal effects. No mediators, colliders, or context variables are "
+                "automatically selected for adjustment."
+            ),
+        },
+        "uncertainty": {
+            "standard_errors": "IID OLS",
+            "panel_uncertainty_status": "unsupported",
+            "panel_uncertainty_note": "Reported standard errors treat rows as IID and do not account for repeated entities.",
+        },
         "adjustment": resolved,
         "macro": None if macro is None else {"name": macro.name, "states": macro.state_count, "feature_columns": macro_features},
         "comparison": {"macro_only": macro_only, "declared_adjustment": declared_fit, "coefficient_changes": coefficient_changes},
@@ -139,7 +171,8 @@ def adjustment_sufficiency_audit(
         "interpretation": (
             "Exploratory observational regression comparison. The coefficients are not causally certified; "
             "a coarse macro does not replace declared continuous covariates, and this report does not establish "
-            "confounder sufficiency or causal identification. IID standard errors do not account for repeated entities."
+            "confounder sufficiency or causal identification. IID standard errors do not account for repeated entities; "
+            "panel-robust uncertainty is unsupported."
         ),
         "data_scope": "Use development rows only; do not use final holdout outcomes for this audit.",
         "context_interpretation": "Context and environment roles are descriptive metadata and do not imply adjustment unless named explicitly.",
@@ -151,32 +184,41 @@ def _coefficient_comparison(
     interventions: list[str],
     target_column: str,
     adjustment_columns: list[str],
+    *,
+    estimand: str = "joint_conditional",
 ) -> list[dict[str, Any]]:
-    records: list[dict[str, Any]] = []
-    for intervention in interventions:
-        features = [intervention, *[column for column in adjustment_columns if column != intervention]]
-        try:
-            fit = fit_linear_model(df, features, target_column)
-        except (ValueError, KeyError) as exc:
-            records.append({"intervention": intervention, "coefficient": None, "stderr": None, "nobs": 0, "error": str(exc)})
+    from causal_emergence_discovery.models import treatment_effect_records
+
+    records = treatment_effect_records(df, interventions, target_column, adjustment_columns, estimand=estimand)
+    return [{"intervention": item.get("treatment"), **item} for item in records]
+
+
+def _resolve_estimand(spec: StudySpec, requested: str | None) -> str:
+    if requested is None:
+        declaration = spec.adjustment
+        requested = getattr(declaration, "estimand", None) or "joint_conditional"
+    if not isinstance(requested, str) or requested not in {"joint_conditional", "marginal"}:
+        raise ValueError("estimand must be 'joint_conditional' or 'marginal'.")
+    return requested
+
+
+def _term_records(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Flatten intervention records for comparing like-for-like terms."""
+    flattened = []
+    for record in records:
+        terms = record.get("terms")
+        if not isinstance(terms, list) or not terms:
+            flattened.append(record)
             continue
-        if intervention not in fit.feature_names:
-            records.append({"intervention": intervention, "coefficient": None, "stderr": None, "nobs": fit.nobs, "note": "intervention was not represented as a single numeric term"})
-            continue
-        index = fit.feature_names.index(intervention)
-        coefficient = float(fit.coefficients[index])
-        stderr = float(fit.stderr[index])
-        records.append({
-            "intervention": intervention,
-            "target": target_column,
-            "coefficient": coefficient,
-            "stderr": stderr,
-            "stderr_iid": stderr,
-            "t_stat": None if stderr == 0.0 else coefficient / stderr,
-            "nobs": fit.nobs,
-            "model_r2": float(fit.r2),
-        })
-    return records
+        for term in terms:
+            if isinstance(term, dict):
+                flattened.append({
+                    **record,
+                    **term,
+                    "comparison_term": term.get("feature_name", term.get("term")),
+                    "terms": terms,
+                })
+    return flattened
 
 
 def _covariate_residual_diagnostics(
@@ -189,9 +231,14 @@ def _covariate_residual_diagnostics(
     if macro_column is None:
         group_design = np.ones((len(df), 1), dtype=float)
     else:
-        groups = df[macro_column].astype("string").fillna("__missing__")
-        dummies = pd.get_dummies(groups, drop_first=True, dtype=float)
-        group_design = np.column_stack([np.ones(len(df)), dummies.to_numpy(dtype=float)])
+        groups = df[macro_column].astype("string")
+        codes, _ = pd.factorize(groups, sort=True, use_na_sentinel=False)
+        levels = int(codes.max()) + 1 if len(codes) else 0
+        dummies = (
+            np.column_stack([(codes == code).astype(float) for code in range(1, levels)])
+            if levels > 1 else np.empty((len(df), 0), dtype=float)
+        )
+        group_design = np.column_stack([np.ones(len(df)), dummies])
     diagnostics = []
     for column in covariates:
         values = pd.to_numeric(df[column], errors="coerce").astype(float).to_numpy()
@@ -220,13 +267,27 @@ def _covariate_residual_diagnostics(
             denom = float(np.std(x_residual) * np.std(z_residual))
             correlation = None if denom == 0.0 else float(np.mean((x_residual - x_residual.mean()) * (z_residual - z_residual.mean())) / denom)
             correlations.append({"intervention": intervention, "residual_correlation": correlation, "nobs": int(treatment_valid.sum())})
+        total_variance_out = _finite_or_none(total_variance)
+        remaining_out = _finite_or_none(remaining)
+        fraction = None if total_variance == 0.0 else _finite_or_none(remaining / total_variance)
+        correlations = [
+            {**item, "residual_correlation": _finite_or_none(item["residual_correlation"])}
+            for item in correlations
+        ]
         diagnostics.append({
             "column": column,
-            "status": "ok",
+            "status": "ok" if total_variance_out is not None and remaining_out is not None else "nonfinite_diagnostic",
             "numeric": True,
-            "total_variance": total_variance,
-            "within_macro_variance": remaining,
-            "within_macro_variance_fraction_remaining": None if total_variance == 0.0 else remaining / total_variance,
+            "total_variance": total_variance_out,
+            "within_macro_variance": remaining_out,
+            "within_macro_variance_fraction_remaining": fraction,
             "treatment_covariate_residual_correlations": correlations,
         })
     return diagnostics
+
+
+def _finite_or_none(value: float | None) -> float | None:
+    if value is None:
+        return None
+    numeric = float(value)
+    return numeric if np.isfinite(numeric) else None

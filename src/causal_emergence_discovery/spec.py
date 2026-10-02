@@ -80,11 +80,16 @@ class ColumnSpec:
 
 @dataclass(frozen=True)
 class AdjustmentSpec:
-    """Explicitly declared adjustment variables and their rationale."""
+    """Explicit covariates, rationale, and treatment-coefficient estimand."""
 
     columns: tuple[str, ...]
     rationale: str
     include_macro: bool = False
+    estimand: str = "joint_conditional"
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.estimand, str) or self.estimand not in {"joint_conditional", "marginal"}:
+            raise ValueError("adjustment.estimand must be 'joint_conditional' or 'marginal'.")
 
     @classmethod
     def from_mapping(cls, value: dict[str, Any] | None) -> "AdjustmentSpec | None":
@@ -106,10 +111,18 @@ class AdjustmentSpec:
         include_macro = value.get("include_macro", False)
         if not isinstance(include_macro, bool):
             raise ValueError("adjustment.include_macro must be a boolean.")
-        return cls(columns=columns, rationale=rationale.strip(), include_macro=include_macro)
+        estimand = value.get("estimand", "joint_conditional")
+        if not isinstance(estimand, str) or estimand not in {"joint_conditional", "marginal"}:
+            raise ValueError("adjustment.estimand must be 'joint_conditional' or 'marginal'.")
+        return cls(columns=columns, rationale=rationale.strip(), include_macro=include_macro, estimand=estimand)
 
     def to_dict(self) -> dict[str, Any]:
-        return {"columns": list(self.columns), "rationale": self.rationale, "include_macro": self.include_macro}
+        return {
+            "columns": list(self.columns),
+            "rationale": self.rationale,
+            "include_macro": self.include_macro,
+            "estimand": self.estimand,
+        }
 
 
 @dataclass(frozen=True)
