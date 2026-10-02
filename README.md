@@ -1,15 +1,16 @@
 # causal-emergence-discovery
 
-`causal-emergence-discovery` is an experimental toolkit for discovering
-macro-level causal structure in longitudinal tabular data.
+`causal-emergence-discovery` is an experimental toolkit for ranking candidate
+macro representations of longitudinal tabular data.
 
 Given a dataset with an entity ID, a time column, and user-described variables,
-the library searches for higher-level representations that make candidate causal
-pathways cleaner, more stable, and more compressive than raw observed variables.
+the library searches for higher-level representations using predictive fit,
+validation specificity, score dispersion, and compression preferences.
 
-The library does **not** claim to identify causal truth from arbitrary
-observational data. It produces ranked causal hypotheses under explicit
-temporal, adjustment, and invariance assumptions.
+The library does **not** establish causal emergence or identify causal truth
+from arbitrary observational data. Its ranking score is a heuristic preference
+over candidate representations. Predictive R² comparisons are descriptive and
+are not causal effects or formal causal-emergence evidence.
 
 ## Input Shape
 
@@ -51,12 +52,10 @@ entities.
 3. Generates candidate macro variables with quantiles, composites, and
    deterministic k-means over numeric state/context features.
 4. Runs branching greedy state-merge search over candidate macrostates.
-5. Scores candidates by:
-   - outcome clarity
-   - macro-specificity
-   - cross-fold stability
-   - compression
-   - difference from a raw micro-feature reference
+5. Ranks candidates with a weighted heuristic: 0.45 times positive-clipped
+   macro R², 0.25 times validation specificity, 0.20 times fold stability, and
+   0.10 times compression. Separately, it reports raw macro and micro R² values
+   and their signed mean paired-fold difference (`macro R² - micro R²`).
 6. Locks the selected macro and evaluates it on a reserved outer holdout.
 7. Reports exploratory intervention coefficients using an explicit adjustment
    declaration and compares them with macro-only adjustment on development rows.
@@ -77,17 +76,34 @@ ced discover panel.csv study.json --validation-mode forward_time --folds 3 --out
 
 Quantile cutpoints, missing-value medians, composite scaling, k-means centers,
 and regression categories are fitted on each inner training fold. State merges
-are candidate recipes evaluated with those fitted transforms. Specificity is
-the positive validation R² of state means learned on the training fold. Search
-and outcome-dependent ranking use development data only. The chosen recipe is
+are candidate recipes evaluated with those fitted transforms. Validation
+specificity is the mean positive-clipped held-out R² of state-only predictions
+whose state means were learned on each training fold. This named quantity is
+the specificity input to the discovery ranking. The full-development
+between-state outcome variance share is separately reported as descriptive
+`outcome_specificity`; it is not a validation estimate. Search and
+outcome-dependent ranking use development data only. The chosen recipe is
 refitted on development data, frozen, and evaluated once on the outer holdout.
+Merge labels identify rank positions in the fitted recipe; they do not certify
+that clusters represent the same populations after refitting. A refit that
+cannot support a requested merge is marked unsupported.
+
+`ranking_score` is a heuristic preference. Its components and weights are
+reported with the result. `predictive_r2_difference` is the signed mean paired
+fold gap between macro and micro models, with their raw R² values and fold
+values retained. A positive difference does not assess emergence. Each
+macro score reports `emergence_evidence_status: "not_assessed"`; the former
+`emergence_delta` field is removed.
 
 `top_macros` and `searches` are development selection results, which can be
-optimistic after searching many candidates. `outer_evaluation` contains the
-selected macro's untouched holdout R² and the micro reference on the same rows.
-It does not calculate holdout specificity, rank other macros, or report a
-composite emergence score. Negative R² is preserved. The score formula is still
-experimental; predictive improvement is separate from causal identification.
+optimistic after searching many candidates. `outer_evaluation` reports the
+selected macro's untouched holdout R² and the micro reference on the same rows
+when enough reserved target labels are available. Otherwise it reports
+`not_evaluable`, a reason, null metrics, and reserved-versus-eligible target
+support without replacing the reserved cohort. It does not calculate holdout
+specificity or rank other macros. Negative R² is preserved in the predictive
+comparison and fold-dispersion calculation. The ranking formula is
+experimental; predictive performance is separate from causal identification.
 
 `validation` records the exact row positions, their source frame, entity and
 time coverage, and purged/excluded rows. Forward splits purge training leads
@@ -121,10 +137,11 @@ conditional exchangeability, consistency, positivity, appropriate interference
 assumptions, and a correctly specified model. Current standard errors assume
 independent rows and are unsuitable for inference on repeated trajectories.
 
-See [validation design](docs/validation.md) for contracts, control experiments,
-and integration notes. The standalone `cross_validated_r2()` and `score_macro()`
-helpers retain row interpolation when no splits are supplied; they do not
-reserve a final holdout. Use `run_discovery()` for selected-model evaluation.
+See [validation design](docs/validation.md) for contracts and control
+experiments. Standalone `score_macro()` calls without explicit validation
+splits use the helper's row-fold evaluation and descriptive in-sample
+specificity; they do not reserve a final holdout. `run_discovery()` supplies
+nested training-only folds and performs the selected-model outer evaluation.
 
 ## Quick Start
 
@@ -159,16 +176,16 @@ print(result["top_macros"][0])
 The output should be read as:
 
 ```text
-Under the declared temporal order and adjustment choices, this macro
-representation gives a cleaner candidate pathway than the raw table alone.
+Under the declared validation design, this macro representation receives a
+higher heuristic ranking for the selected predictive and descriptive criteria.
 ```
 
 It should not be read as:
 
 ```text
-The library proved the true causal graph.
+The library detected causal emergence or proved the true causal graph.
 ```
 
 Useful follow-up work includes sensitivity analysis, stronger causal discovery
 backends, learned latent-state models, invariance checks across environments,
-and richer causal-emergence scores.
+and prespecified tests of causal-emergence definitions.

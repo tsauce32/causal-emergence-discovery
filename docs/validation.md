@@ -24,9 +24,12 @@ forecast made without observing any future covariates at the initial boundary.
 Candidate definitions, state-merge search, and selection use development data.
 For every inner split, `refit_macro()` learns the recipe's imputation, scaling,
 cutpoints, or centers from training rows, then `apply_macro()` applies the
-frozen encoder to test rows. Validation labels retain training state identities
-regardless of row ordering. Quantile ties are never split by row position.
-State IDs enter regression as categories, without an ordinal distance assumption.
+frozen encoder to test rows. Merge IDs refer to training-fitted rank positions
+in a recipe. They are structural recipe labels, not certified identities for
+the same population across different fitted distributions. A refit that loses
+a requested state or cutpoint fails as unsupported instead of silently
+reassigning that merge. Quantile ties are never split by row position. State
+IDs enter regression as categories, without an ordinal distance assumption.
 
 `fit_linear_model()` retains a `DesignEncoder`; `predict_linear_model()` and
 `predict_r2()` reuse its medians and category levels. New categories map to zero
@@ -36,15 +39,33 @@ fold support also fails rather than changing the declared evaluation.
 Input columns that collide with generated target or internal metadata names
 are rejected so a preexisting lead outcome cannot silently become a predictor.
 
-`top_macros` and `searches` are development rankings. Specificity now measures
-validation predictions of training-fitted state means, not full-sample target
-separation. Once ranked, one chosen recipe is refitted on development data and
-applied to the untouched outer holdout. `outer_evaluation` reports macro R²,
-micro R², their signed predictive difference, state coverage, and the frozen
-encoder audit. No outer outcome influences selection or specificity. Holdout
-metrics describe this selected recipe and this split; they are not identified
-causal effects. Repeatedly tuning against the outer report invalidates its
-untouched status; a new test sample is then needed.
+`top_macros` and `searches` are development rankings. In discovery,
+`validation_specificity` (also exposed under the compatibility key
+`specificity`) is the mean of each inner fold's positive-clipped held-out R²
+for state-only predictions, with state means refit on that fold's training
+rows. The result records the definition as
+`mean_positive_clipped_validation_r2_of_training_fitted_state_means`.
+`outcome_specificity` is a different quantity: the full-development
+between-state outcome variance share, included as a descriptive statistic and
+excluded from ranking. Standalone `score_macro()` use without validation splits
+cannot claim held-out specificity and labels its descriptive fallback explicitly.
+
+The schema-v2 `ranking_score` is a heuristic weighted preference over
+positive-clipped macro R², validation specificity, raw-fold R² dispersion, and
+compression. The output exposes its named components and weights, raw paired
+macro/micro R² values, and signed `predictive_r2_difference` (macro minus micro,
+averaged across the same folds). `emergence_evidence_status` is always
+`not_assessed`; the removed `emergence_delta` is not a substitute definition
+of emergence. Once ranked, one chosen recipe is refitted on development data
+and applied to the untouched outer holdout. `outer_evaluation` reports the
+selected macro and micro predictive R², their signed difference, state
+coverage, and frozen-encoder audit. When the reserved cohort lacks enough
+eligible target labels for evaluation, it reports `status: not_evaluable`, a
+reason, null predictive metrics, and reserved-versus-eligible target support;
+the cohort is not silently replaced. Outer scores never enter candidate
+scoring or reranking. Holdout metrics describe this selected recipe and split;
+they are not causal effects. Repeatedly tuning against the outer report
+invalidates its untouched status; a new test sample is then needed.
 
 ## Adjustment
 
@@ -88,33 +109,12 @@ continuous-u adjustment and reports the new development/outer separation. The
 toy data-generating mechanism supplies the causal assumptions for this control;
 the software cannot establish them in observational input.
 
-## Integration with the parallel scoring priority
+## Scope and interpretation
 
-Base: upstream commit `22538091e1b44941ee750e96c5d8afe048fe9ae0`.
-Checkout: `work/discovery-validation`, branch `codex/discovery-validation`.
-The preserved review checkout remains unchanged.
-
-Potential overlap with scoring work:
-
-- `scoring.py`: `score_macro(..., validation_splits=None)` refits transforms per
-  fold, uses categorical states, and supplies validation specificity. The
-  `MacroScore` fields, serialized keys, weighted score formula, and asymmetric
-  `emergence_delta` formula are left for the scoring priority to repair.
-- `search.py`: forwards `validation_splits`; ranking semantics are unchanged.
-- `discovery.py`: reserves the outer split before candidate creation, scopes
-  ranking to development, and adds `validation`, `outer_evaluation`, and
-  `adjustment` results. Scoring-specific output descriptions must be reconciled.
-- `models.py`: adds training-fitted `DesignEncoder` to `LinearFit`; CV accepts
-  explicit splits. Calls omitting splits retain legacy row interpolation and
-  have no selected-model holdout guarantee.
-- `macro.py` and `panel.py`: fitted macro recipes/merges and explicit target-time
-  metadata. `spec.py` adds the independent adjustment declaration.
-- `cli.py`, `README.md`, and `docs/design.md`: evaluation and adjustment wording
-  may overlap with updated score/API descriptions.
-
-New independent modules: `validation.py` and `adjustment.py`. Regression tests
-are separated in `test_validation.py`, `test_encoders_adjustment.py`, and
-`test_nested_evaluation.py`. Integrate the fold/outer evaluation changes with the
-other chat's score formula; do not restore row-based validation while resolving
-conflicts. `outer_evaluation.predictive_r2_difference` is explicitly a predictive
-comparison, not a replacement definition for that chat's emergence delta.
+The validation plan describes a prediction estimand and the rows used to
+evaluate it; it does not certify the caller's causal assumptions or a formal
+emergence test. `predictive_evaluation_scope` and optional IDs identify the
+producer-declared paired score sample, but do not by themselves prove that the
+models used identical target rows or a valid split. Fold dispersion is a
+descriptive stability preference, not an uncertainty interval. See the
+[design notes](design.md) for score definitions and limitations.

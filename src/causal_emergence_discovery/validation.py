@@ -152,8 +152,18 @@ def build_validation_plan(
     return ValidationPlan(outer=outer, inner=tuple(inner), mode=mode, audit=audit)
 
 
+def _entity_sort_key(value: Any) -> tuple[str, str, str, str]:
+    """Break textual-ID ties by type, independent of first-seen row order.
+
+    Ordinary scalar IDs keep their existing textual order. Distinct values
+    such as integer 1 and string "1" receive stable, different sort keys.
+    """
+    kind = type(value)
+    return str(value), kind.__module__, kind.__qualname__, repr(value)
+
+
 def _entity_outer(df: pd.DataFrame, id_column: str, fraction: float, seed: int) -> DataSplit:
-    entities = np.asarray(sorted(pd.unique(df[id_column]).tolist(), key=lambda x: str(x)), dtype=object)
+    entities = np.asarray(sorted(pd.unique(df[id_column]).tolist(), key=_entity_sort_key), dtype=object)
     test_count = max(1, int(np.ceil(len(entities) * fraction)))
     train_count = len(entities) - test_count
     if train_count < 1:
@@ -170,7 +180,7 @@ def _entity_outer(df: pd.DataFrame, id_column: str, fraction: float, seed: int) 
 
 
 def _entity_inner(df: pd.DataFrame, id_column: str, folds: int, seed: int) -> list[DataSplit]:
-    entities = np.asarray(sorted(pd.unique(df[id_column]).tolist(), key=lambda x: str(x)), dtype=object)
+    entities = np.asarray(sorted(pd.unique(df[id_column]).tolist(), key=_entity_sort_key), dtype=object)
     if len(entities) < folds + 1:
         raise ValueError(
             f"entity_holdout needs at least folds + 1 ({folds + 1}) outer-training entities; "

@@ -111,10 +111,9 @@ def _record(macro: MacroAssignment, score: MacroScore) -> dict[str, object]:
     return record
 
 
-def _rank_key(node: SearchNode) -> tuple[float, float, float, int, str]:
+def _rank_key(node: SearchNode) -> tuple[float, float, int, str]:
     return (
-        node.score.score,
-        node.score.emergence_delta,
+        node.score.ranking_score,
         node.score.specificity,
         node.score.state_count,
         node.macro.name,

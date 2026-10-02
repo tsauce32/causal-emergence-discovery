@@ -101,30 +101,77 @@ def _print_summary(result: dict[str, object]) -> None:
     print(f"status: {result['status']}")
     print(f"rows: {panel['row_count']}  entities: {panel['entity_count']}")
     print(f"outcome: {config['outcome']}  lag: {config['lag']}  target: {columns['target']}")
-    print(f"validation: {config['validation_mode']}  outer holdout: {config['holdout_fraction']:.0%}")
+    if "validation_mode" in config:
+        fraction = config.get("holdout_fraction")
+        holdout_text = "n/a" if fraction is None else f"{fraction:.0%}"
+        print(f"validation: {config['validation_mode']}  outer holdout: {holdout_text}")
     print(f"candidate macro features: {len(columns['macro_features'])}")
     if top_macros:
         best = top_macros[0]
+        ranking_score = best.get("ranking_score", best.get("score"))
+        score_text = "n/a" if ranking_score is None else f"{ranking_score:.4f}"
         print(
             "best macro: "
             f"{best['macro_name']} "
-            f"score={best['score']:.4f} "
-            f"delta={best['emergence_delta']:.4f} "
+            f"ranking_score={score_text} "
             f"states={best['state_count']}"
         )
-        print(
-            "  development selection components: "
-            f"macro_r2={best['macro_r2']:.4f}, "
-            f"micro_r2={best['micro_r2']:.4f}, "
-            f"specificity={best['specificity']:.4f}, "
-            f"stability={best['stability']:.4f}, "
-            f"compression={best['compression']:.4f}"
-        )
-    evaluation = result["outer_evaluation"]
-    print(
-        f"untouched holdout: macro_r2={evaluation['macro_r2']:.4f}, "
-        f"micro_r2={evaluation['micro_r2']:.4f}, rows={evaluation['test_rows']}"
-    )
+        ranking_components = best.get("ranking_components")
+        if ranking_components:
+            component_text = ", ".join(
+                f"{name}={value:.4f}" for name, value in ranking_components.items()
+            )
+            print(f"  ranking components: {component_text}")
+        if best.get("macro_r2") is not None and best.get("micro_r2") is not None:
+            print(
+                "  raw predictive R2: "
+                f"macro={best['macro_r2']:.4f}, micro={best['micro_r2']:.4f}"
+            )
+        difference = best.get("predictive_r2_difference")
+        if difference is not None:
+            print(
+                "  predictive R2 difference (macro - micro, mean paired fold gap): "
+                f"{difference:.4f}"
+            )
+        if best.get("predictive_evaluation_scope") is not None:
+            print(f"  predictive evaluation scope: {best['predictive_evaluation_scope']}")
+        if best.get("emergence_evidence_status") is not None:
+            print(f"  emergence evidence: {best['emergence_evidence_status']}")
+        validation_specificity = best.get("validation_specificity")
+        if validation_specificity is not None:
+            print(
+                "  validation specificity "
+                f"({best['specificity_definition']}): {validation_specificity:.4f}"
+            )
+        outcome_specificity = best.get("outcome_specificity")
+        if outcome_specificity is not None:
+            print(
+                "  descriptive in-sample outcome specificity: "
+                f"{outcome_specificity:.4f}"
+            )
+    evaluation = result.get("outer_evaluation")
+    if evaluation is not None:
+        evaluation_status = evaluation.get("status", "evaluated")
+        macro_r2 = evaluation.get("macro_r2")
+        micro_r2 = evaluation.get("micro_r2")
+        if macro_r2 is None or micro_r2 is None:
+            reason = evaluation.get("reason", evaluation.get("unavailable_reason"))
+            suffix = f" reason={reason}" if reason else ""
+            print(f"untouched holdout: status={evaluation_status}{suffix}")
+            support = evaluation.get("target_support")
+            if isinstance(support, dict):
+                reserved = support.get("reserved_rows", support.get("reserved"))
+                eligible = support.get("eligible_rows", support.get("eligible"))
+                if reserved is not None or eligible is not None:
+                    print(f"  holdout target support: reserved={reserved}, eligible={eligible}")
+        else:
+            rows = evaluation.get("test_rows", "n/a")
+            difference = evaluation.get("predictive_r2_difference")
+            difference_text = "" if difference is None else f", macro-micro={difference:.4f}"
+            print(
+                f"untouched holdout: macro_r2={macro_r2:.4f}, "
+                f"micro_r2={micro_r2:.4f}{difference_text}, rows={rows}"
+            )
     pathways = result["candidate_pathways"]
     if pathways:
         print("candidate pathways:")

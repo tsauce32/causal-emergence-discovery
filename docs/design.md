@@ -2,8 +2,8 @@
 
 ## Goal
 
-The project searches for higher-level descriptions of a longitudinal table that
-make candidate causal pathways clearer.
+The project ranks candidate macro representations of a longitudinal table
+under a declared predictive validation design.
 
 The MVP is intentionally simple:
 
@@ -21,7 +21,7 @@ CSV + study spec
   -> entity / time / interpolation validation plan and reserved outer holdout
   -> candidate macro variables
   -> branching greedy state-merge search
-  -> macro emergence scores
+  -> heuristic ranking scores and paired predictive summaries
   -> locked selected macro and untouched outer predictive evaluation
   -> explicitly adjusted development-only pathway diagnostics
   -> JSON/text report
@@ -29,23 +29,35 @@ CSV + study spec
 
 ## Score Components
 
-The current macro score is a weighted combination of:
+`ranking_score` is a heuristic weighted combination of:
 
-- `macro_r2`: development-fold predictive clarity of intervention + categorical macro state
-- `specificity`: positive development-validation R² of training-fitted state means
-- `stability`: inverse cross-fold score dispersion
+- positive-clipped `macro_r2`: predictive R² for intervention + categorical macro state
+- `validation_specificity`: mean positive-clipped held-out R² from state-only models whose state means are fit on each inner training fold
+- `stability`: inverse dispersion of the raw macro fold R² values
 - `compression`: fewer macro states relative to row count
 
-`emergence_delta` subtracts the weighted positive raw micro-feature reference R2.
-This is a pragmatic MVP score, not a final definition of causal emergence.
-All these terms belong to development selection. The selected macro's
-`outer_evaluation` contains separate predictive R² values with no holdout
-utility calculation or candidate reranking. [Validation contracts](validation.md)
-describe the split and fitted-transform APIs.
+The weights are 0.45, 0.25, 0.20, and 0.10, respectively. The separately
+reported `outcome_specificity` is the descriptive full-development
+between-state outcome variance share; it is not the validation specificity
+used for ranking. Raw `macro_r2`, raw `micro_r2`, and signed
+`predictive_r2_difference` (`macro_r2 - micro_r2`, averaged over paired folds)
+remain available for comparison. Fold-level raw values and differences are
+retained. Negative R² values are not clipped for reporting or dispersion.
+
+The score is a heuristic ranking preference, not a detector or measure of
+causal emergence. Candidate score records carry
+`emergence_evidence_status: "not_assessed"`; there is no `emergence_delta`
+field. All candidate ranking uses development
+data. The selected macro's `outer_evaluation` reports its separate predictive
+performance on the reserved holdout and never enters candidate scoring or
+reranking. [Validation contracts](validation.md) describe split construction,
+training-only refits, and adjustment.
 
 ## Causal Caution
 
-The MVP estimates intervention coefficients with linear adjustment models. These
-are causal hypotheses under assumptions, not proof. Future versions should add
-sensitivity analysis, doubly robust estimators, causal graph constraints, and
-environmental invariance tests.
+The MVP reports exploratory intervention associations with a declared
+adjustment model. Causal interpretation requires a scientifically justified
+adjustment set and assumptions the software cannot verify. The workflow does
+not identify causal effects or establish causal emergence. Future versions
+could add sensitivity analysis, doubly robust estimators, causal graph
+constraints, and environmental invariance tests.

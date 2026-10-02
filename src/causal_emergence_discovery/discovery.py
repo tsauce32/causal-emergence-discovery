@@ -107,8 +107,7 @@ def run_discovery(
     top_macros = sorted(
         (search["best"] for search in searches),
         key=lambda item: (
-            float(item["score"]),
-            float(item["emergence_delta"]),
+            float(item["ranking_score"]),
             float(item["specificity"]),
             int(item["state_count"]),
             str(item["macro_name"]),
@@ -117,7 +116,11 @@ def run_discovery(
     )[: config.top_k]
     for record in top_macros:
         record["evaluation_scope"] = "development_selection_only"
-        record["specificity_definition"] = "positive_validation_r2_of_training_state_means"
+        # Keep the split-derived selection quantity explicit; the separate
+        # outcome_specificity field is descriptive between-state variance.
+        record["specificity_definition"] = (
+            "mean_positive_clipped_validation_r2_of_training_fitted_state_means"
+        )
 
     best_macro = refit_macro(_find_macro_for_record(initial_macros, searches, top_macros[0]), development)
     evaluation = _evaluate_selected_macro(
@@ -130,6 +133,7 @@ def run_discovery(
 
     return {
         "library": "causal-emergence-discovery",
+        "schema_version": 2,
         "status": "experimental_hypothesis_generation",
         "assumptions": [
             "Rows are longitudinal observations of the same entities over time.",
@@ -139,6 +143,15 @@ def run_discovery(
             "Intervention coefficients are adjustment-based observational estimates, not proof of causal effects.",
             "Macro variables are scored by outcome clarity, specificity, stability, and compression.",
         ],
+        "score_semantics": {
+            "schema_version": 2,
+            "ranking_score": "heuristic preference for candidate ranking; not an emergence statistic",
+            "specificity": "mean_positive_clipped_validation_r2_of_training_fitted_state_means",
+            "outcome_specificity": "descriptive in-sample between-state outcome variance share",
+            "predictive_comparison": "raw paired macro-minus-micro R2; caller scope labels do not certify split independence",
+            "predictive_provenance": "computed_training_only_refit",
+            "emergence_evidence_status": "not_assessed",
+        },
         "panel": {
             "row_count": panel_summary.row_count,
             "entity_count": panel_summary.entity_count,
