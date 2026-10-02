@@ -1,9 +1,10 @@
 """Build artifact installation smoke checks for release acceptance.
 
 Run through ``packaging/run_acceptance.ps1`` so the wheel and sdist are first
-built into a workspace-local artifact directory. Every import and CLI command
-below runs from a temporary working directory with the installed target on
-PYTHONPATH, which prevents the checkout's ``src`` tree from shadowing it.
+built into a workspace-local artifact directory. The wheel is installed in
+an isolated virtual environment and the sdist into a workspace-local target.
+API and CLI subprocesses run outside the source tree and verify the import path
+resolves to the installation, so the checkout's ``src`` tree cannot shadow it.
 """
 
 from __future__ import annotations
@@ -11,6 +12,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 
@@ -19,6 +21,7 @@ import pytest
 
 REPOSITORY = Path(__file__).resolve().parents[1]
 ARTIFACTS = Path(os.environ.get("CED_PACKAGE_ACCEPTANCE_ARTIFACT_DIR", REPOSITORY / "packaging" / "artifacts" / "dist"))
+SHORT_WORK_ROOT = REPOSITORY / ".pa"
 PYTHON = os.environ.get("CED_PYTHON_EXE", sys.executable)
 
 
@@ -33,12 +36,34 @@ def _run(command: list[str], *, cwd: Path, env: dict[str, str]) -> subprocess.Co
 
 def _installed_env(target: Path) -> dict[str, str]:
     env = os.environ.copy()
+    env.pop("PYTHONPATH", None)
+    env.pop("PYTHONHOME", None)
+    return env
+
+
+def _fresh_short_workspace(name: str) -> Path:
+    root = SHORT_WORK_ROOT.resolve()
+    target = (root / name).resolve()
+    assert target.parent == root and name in {"wheel-venv", "sdist-target"}
+    if target.exists():
+        shutil.rmtree(target)
+    return target
+
+
+def _target_env(target: Path) -> dict[str, str]:
+    env = os.environ.copy()
     env["PYTHONPATH"] = str(target)
     env.pop("PYTHONHOME", None)
     return env
 
 
-def _assert_result(result: dict[str, object], installed_root: Path | None = None) -> None:
+def _assert_result(
+    result: dict[str, object],
+    installed_root: Path | None = None,
+    *,
+    installed_python: Path | None = None,
+    installed_env: dict[str, str] | None = None,
+) -> None:
     assert result["library"] == "causal-emergence-discovery"
     assert result["schema_version"] == 2
     candidates = result["top_macros"]
@@ -64,7 +89,9 @@ def _assert_result(result: dict[str, object], installed_root: Path | None = None
             "from pathlib import Path; "
             "print(Path(ced.__file__).resolve())"
         )
-        completed = _run([PYTHON, "-c", import_line], cwd=installed_root.parent, env=_installed_env(installed_root))
+        python_exe = installed_python or (installed_root / "Scripts" / "python.exe")
+        import_env = installed_env or _installed_env(installed_root)
+        completed = _run([str(python_exe), "-c", import_line], cwd=installed_root.parent, env=import_env)
         imported_path = Path(completed.stdout.strip()).resolve()
         assert imported_path.is_relative_to(installed_root.resolve()), imported_path
 
@@ -99,9 +126,25 @@ def _fixture_files(directory: Path) -> tuple[Path, Path]:
     return panel_path, spec_path
 
 
-def _install_artifact(artifact: Path, target: Path, *, cwd: Path, env: dict[str, str]) -> None:
+def _install_artifact(artifact: Path, target: Path, *, cwd: Path, env: dict[str, str]) -> tuple[Path, Path]:
+    _run([PYTHON, "-m", "venv", "--system-site-packages", str(target)], cwd=cwd, env=env)
+    installed_python = target / "Scripts" / "python.exe"
+    pip_temp = SHORT_WORK_ROOT / "t"
+    pip_temp.mkdir(exist_ok=True)
+    install_env = env.copy()
+    install_env["TEMP"] = str(pip_temp)
+    install_env["TMP"] = str(pip_temp)
     _run([
-        PYTHON, "-m", "pip", "install", "--no-deps", "--no-build-isolation",
+        str(installed_python), "-m", "pip", "install", "--no-cache-dir", "--no-deps", "--no-build-isolation",
+        str(artifact),
+    ], cwd=cwd, env=install_env)
+    return installed_python, target / "Scripts" / "ced.exe"
+
+
+def _install_sdist(artifact: Path, target: Path, *, cwd: Path, env: dict[str, str]) -> None:
+    target.mkdir()
+    _run([
+        PYTHON, "-m", "pip", "install", "--no-cache-dir", "--no-deps", "--no-build-isolation",
         "--target", str(target), str(artifact),
     ], cwd=cwd, env=env)
 
@@ -109,9 +152,8 @@ def _install_artifact(artifact: Path, target: Path, *, cwd: Path, env: dict[str,
 def test_wheel_public_api_and_console_command_use_installed_package(tmp_path: Path) -> None:
     wheels = list(ARTIFACTS.glob("causal_emergence_discovery-0.2.0-*.whl"))
     assert len(wheels) == 1, f"Expected one 0.2.0 wheel in {ARTIFACTS}; found {wheels}"
-    install_root = tmp_path / "wheel-install"
-    install_root.mkdir()
-    _install_artifact(wheels[0], install_root, cwd=tmp_path, env=os.environ.copy())
+    install_root = _fresh_short_workspace("wheel-venv")
+    installed_python, cli = _install_artifact(wheels[0], install_root, cwd=tmp_path, env=os.environ.copy())
     env = _installed_env(install_root)
 
     api_smoke = r'''
@@ -138,12 +180,10 @@ spec = StudySpec.from_dict({"dataset":{"id_column":"entity_id","time_column":"ti
 result = run_discovery(pd.DataFrame(rows), spec, DiscoveryConfig(outcome="outcome", max_states=3, paths=2, branching_factor=2, folds=2, top_k=2, seed=7))
 print(json.dumps(result))
 '''
-    completed = _run([PYTHON, "-c", api_smoke, str(install_root)], cwd=tmp_path, env=env)
+    completed = _run([str(installed_python), "-c", api_smoke, str(install_root)], cwd=tmp_path, env=env)
     _assert_result(json.loads(completed.stdout.strip().splitlines()[-1]), install_root)
 
     panel, spec = _fixture_files(tmp_path)
-    scripts = install_root / "Scripts"
-    cli = scripts / "ced.exe"
     assert cli.exists(), f"Installed console entry point missing: {cli}"
     cli_result = _run([
         str(cli), "discover", str(panel), str(spec), "--outcome", "outcome",
@@ -155,13 +195,16 @@ print(json.dumps(result))
 def test_sdist_module_command_uses_installed_package(tmp_path: Path) -> None:
     sdists = list(ARTIFACTS.glob("causal_emergence_discovery-0.2.0.tar.gz"))
     assert len(sdists) == 1, f"Expected one 0.2.0 sdist in {ARTIFACTS}; found {sdists}"
-    install_root = tmp_path / "sdist-install"
-    install_root.mkdir()
-    _install_artifact(sdists[0], install_root, cwd=tmp_path, env=os.environ.copy())
+    install_root = _fresh_short_workspace("sdist-target")
+    _install_sdist(sdists[0], install_root, cwd=SHORT_WORK_ROOT, env=os.environ.copy())
     panel, spec = _fixture_files(tmp_path)
+    env = _target_env(install_root)
     result = _run([
         PYTHON, "-m", "causal_emergence_discovery", "discover", str(panel), str(spec),
         "--outcome", "outcome", "--max-states", "3", "--paths", "2", "--folds", "2",
         "--top-k", "2", "--json",
-    ], cwd=tmp_path, env=_installed_env(install_root))
-    _assert_result(json.loads(result.stdout), install_root)
+    ], cwd=tmp_path, env=env)
+    _assert_result(
+        json.loads(result.stdout), install_root,
+        installed_python=Path(PYTHON), installed_env=env,
+    )

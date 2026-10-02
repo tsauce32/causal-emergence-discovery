@@ -193,8 +193,15 @@ python -m pip install -e ".[dev]"
 python examples/generate_synthetic_panel.py
 ced validate examples/synthetic_panel.generated.csv examples/synthetic_study.generated.json
 ced discover examples/synthetic_panel.generated.csv examples/synthetic_study.generated.json --outcome reading_score
-python -m pytest
+python -m pytest --ignore=tests/test_package_acceptance.py
 ```
+
+For installed-distribution acceptance on Windows, run
+`./packaging/run_acceptance.ps1` in PowerShell. The runner builds a wheel and
+source distribution, installs the wheel in a workspace-local virtual environment
+and the source distribution in an isolated target directory, and checks the
+installed API and CLI. Its `-Python` and `-DependencyRoot`
+parameters select the runtime and build-tool dependencies.
 
 Or from Python:
 
