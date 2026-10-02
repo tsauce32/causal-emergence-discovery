@@ -9,44 +9,71 @@ import pandas as pd
 
 
 @dataclass(frozen=True)
+class DesignEncoder:
+    """Training-only imputation and categorical levels for a linear design."""
+
+    columns: tuple[str, ...]
+    numeric_fills: dict[str, float]
+    categories: dict[str, tuple[str, ...]]
+    feature_names: tuple[str, ...]
+
+    def transform(self, df: pd.DataFrame) -> np.ndarray:
+        frames = []
+        for column in self.columns:
+            if column in self.numeric_fills:
+                values = pd.to_numeric(df[column], errors="coerce").replace([np.inf, -np.inf], np.nan)
+                frames.append(values.fillna(self.numeric_fills[column]).to_numpy(dtype=float).reshape(-1, 1))
+            else:
+                values = df[column].astype("string").fillna("__missing__")
+                frames.append(np.column_stack([(values == level).to_numpy(dtype=float) for level in self.categories[column]]))
+        return np.hstack(frames) if frames else np.empty((len(df), 0))
+
+
+def fit_design_encoder(df: pd.DataFrame, columns: list[str]) -> DesignEncoder:
+    """Fit medians and levels without consulting validation rows."""
+    numeric_fills: dict[str, float] = {}
+    categories: dict[str, tuple[str, ...]] = {}
+    names: list[str] = []
+    for column in dict.fromkeys(columns):
+        values = df[column]
+        if pd.api.types.is_numeric_dtype(values) or pd.api.types.is_bool_dtype(values):
+            numeric = pd.to_numeric(values, errors="coerce").replace([np.inf, -np.inf], np.nan)
+            numeric_fills[column] = float(numeric.median()) if numeric.notna().any() else 0.0
+            names.append(column)
+        else:
+            levels = tuple(sorted(values.astype("string").fillna("__missing__").unique().tolist()))
+            categories[column] = levels
+            names.extend(f"{column}={level}" for level in levels)
+    return DesignEncoder(tuple(dict.fromkeys(columns)), numeric_fills, categories, tuple(names))
+
+
+@dataclass(frozen=True)
 class LinearFit:
     feature_names: tuple[str, ...]
     coefficients: np.ndarray
     stderr: np.ndarray
     r2: float
     nobs: int
+    encoder: DesignEncoder
 
 
 def design_matrix(df: pd.DataFrame, columns: list[str]) -> tuple[np.ndarray, tuple[str, ...]]:
-    """Encode mixed tabular columns as a numeric design matrix."""
-    if not columns:
-        return np.empty((len(df), 0)), ()
-    frames = []
-    feature_names: list[str] = []
-    for column in columns:
-        values = df[column]
-        if pd.api.types.is_numeric_dtype(values) or pd.api.types.is_bool_dtype(values):
-            numeric = pd.to_numeric(values, errors="coerce").astype(float)
-            fill = float(numeric.median()) if numeric.notna().any() else 0.0
-            frames.append(numeric.fillna(fill).to_numpy().reshape(-1, 1))
-            feature_names.append(column)
-        else:
-            dummies = pd.get_dummies(values.astype("string").fillna("__missing__"), prefix=column)
-            frames.append(dummies.to_numpy(dtype=float))
-            feature_names.extend(str(name) for name in dummies.columns)
-    return np.hstack(frames), tuple(feature_names)
+    """Fit and encode a standalone table; predictions use the fit's encoder."""
+    encoder = fit_design_encoder(df, columns)
+    return encoder.transform(df), encoder.feature_names
 
 
 def fit_linear_model(df: pd.DataFrame, feature_columns: list[str], target_column: str) -> LinearFit:
-    """Fit an ordinary least squares model with a small ridge fallback."""
+    """Fit ordinary least squares with a pseudoinverse for singular designs."""
     clean = df.dropna(subset=[target_column]).reset_index(drop=True)
-    y = pd.to_numeric(clean[target_column], errors="coerce")
+    y = pd.to_numeric(clean[target_column], errors="coerce").replace([np.inf, -np.inf], np.nan)
     clean = clean.loc[y.notna()].reset_index(drop=True)
     y_values = y.loc[y.notna()].to_numpy(dtype=float)
     if len(clean) < 2:
         raise ValueError("At least two non-missing target rows are required.")
 
-    x, feature_names = design_matrix(clean, feature_columns)
+    encoder = fit_design_encoder(clean, feature_columns)
+    x, feature_names = encoder.transform(clean), encoder.feature_names
     x = np.column_stack([np.ones(len(clean)), x])
     names = ("intercept", *feature_names)
     xtx = x.T @ x
@@ -67,6 +94,7 @@ def fit_linear_model(df: pd.DataFrame, feature_columns: list[str], target_column
         stderr=stderr,
         r2=float(r2),
         nobs=len(clean),
+        encoder=encoder,
     )
 
 
@@ -76,26 +104,37 @@ def cross_validated_r2(
     target_column: str,
     *,
     folds: int = 5,
+    splits=None,
 ) -> tuple[float, list[float]]:
-    """Compute deterministic K-fold R2 for a linear model."""
-    clean = df.dropna(subset=[target_column]).reset_index(drop=True)
-    if len(clean) < 4:
-        return 0.0, [0.0]
-    fold_count = max(2, min(folds, len(clean)))
+    """Evaluate declared splits, or legacy row interpolation when omitted.
+
+    Omitted splits answer a within-observed-rows interpolation question; they
+    do not estimate performance for new entities or future periods. Discovery
+    always supplies an auditable ValidationPlan's development splits.
+    """
+    clean = df.reset_index(drop=True)
+    if splits is None:
+        if folds < 2:
+            raise ValueError("At least two folds are required.")
+        indices = np.arange(len(clean))
+        splits = [(indices[indices % folds != fold], indices[indices % folds == fold]) for fold in range(folds)]
     scores = []
-    indices = np.arange(len(clean))
-    for fold in range(fold_count):
-        test_mask = indices % fold_count == fold
-        train = clean.loc[~test_mask].reset_index(drop=True)
-        test = clean.loc[test_mask].reset_index(drop=True)
-        if len(test) < 2 or len(train) < 2:
-            continue
+    for split in splits:
+        train_indices, test_indices = (split.train_indices, split.test_indices) if hasattr(split, "train_indices") else split
+        train = clean.iloc[list(train_indices)].reset_index(drop=True)
+        test = clean.iloc[list(test_indices)].reset_index(drop=True)
         fit = fit_linear_model(train, feature_columns, target_column)
         score = predict_r2(fit, test, feature_columns, target_column)
         scores.append(score)
     if not scores:
-        return 0.0, [0.0]
+        raise ValueError("No validation splits were supplied.")
     return float(np.mean(scores)), [float(score) for score in scores]
+
+
+def predict_linear_model(fit: LinearFit, df: pd.DataFrame) -> np.ndarray:
+    """Predict with frozen training preprocessing; unknown categories are zero."""
+    x = np.column_stack([np.ones(len(df)), fit.encoder.transform(df)])
+    return x @ fit.coefficients
 
 
 def predict_r2(
@@ -105,23 +144,18 @@ def predict_r2(
     target_column: str,
 ) -> float:
     clean = df.dropna(subset=[target_column]).reset_index(drop=True)
-    y = pd.to_numeric(clean[target_column], errors="coerce")
+    y = pd.to_numeric(clean[target_column], errors="coerce").replace([np.inf, -np.inf], np.nan)
     clean = clean.loc[y.notna()].reset_index(drop=True)
     y_values = y.loc[y.notna()].to_numpy(dtype=float)
     if len(clean) < 2:
-        return 0.0
-    x_raw, feature_names = design_matrix(clean, feature_columns)
-    aligned = np.zeros((len(clean), len(fit.feature_names) - 1))
-    target_names = list(fit.feature_names[1:])
-    for source_index, name in enumerate(feature_names):
-        if name in target_names:
-            aligned[:, target_names.index(name)] = x_raw[:, source_index]
-    x = np.column_stack([np.ones(len(clean)), aligned])
-    predictions = x @ fit.coefficients
+        raise ValueError("Validation requires at least two finite target rows.")
+    if tuple(dict.fromkeys(feature_columns)) != fit.encoder.columns:
+        raise ValueError("Prediction features must match the fitted design columns.")
+    predictions = predict_linear_model(fit, clean)
     centered = y_values - y_values.mean()
     ss_total = float(centered @ centered)
     if ss_total == 0.0:
-        return 0.0
+        raise ValueError("Validation R2 is undefined for a constant target.")
     residuals = y_values - predictions
     return float(1.0 - float(residuals @ residuals) / ss_total)
 

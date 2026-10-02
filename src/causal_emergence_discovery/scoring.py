@@ -8,8 +8,8 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-from causal_emergence_discovery.macro import MacroAssignment
-from causal_emergence_discovery.models import cross_validated_r2
+from causal_emergence_discovery.macro import MacroAssignment, apply_macro, refit_macro
+from causal_emergence_discovery.models import fit_linear_model, predict_r2
 
 
 MACRO_COLUMN = "__ced_macro_state"
@@ -58,27 +58,42 @@ def score_macro(
     micro_feature_columns: list[str],
     intervention_columns: list[str],
     folds: int = 5,
+    validation_splits=None,
 ) -> MacroScore:
-    """Score a candidate macro variable against a future outcome."""
-    working = df.copy()
-    working[MACRO_COLUMN] = macro.labels.to_numpy()
+    """Rank on development folds with training-only encoders and specificity.
+
+    With no split plan this standalone helper uses legacy row interpolation.
+    Only run_discovery supplies a reserved outer holdout; this score is for
+    selection and must not be reported as selected-model generalization.
+    """
+    if validation_splits is None:
+        if folds < 2:
+            raise ValueError("At least two folds are required.")
+        indices = np.arange(len(df))
+        validation_splits = [(indices[indices % folds != fold], indices[indices % folds == fold]) for fold in range(folds)]
     macro_features = [*intervention_columns, MACRO_COLUMN]
-    macro_r2, fold_scores = cross_validated_r2(
-        working,
-        macro_features,
-        target_column,
-        folds=folds,
-    )
     micro_features = _ordered_unique([*intervention_columns, *micro_feature_columns])
-    micro_r2, _ = cross_validated_r2(
-        working,
-        micro_features,
-        target_column,
-        folds=folds,
-    )
-    specificity = outcome_specificity(working, MACRO_COLUMN, target_column)
+    fold_scores, micro_scores, specificity_scores = [], [], []
+    for split in validation_splits:
+        train_indices, test_indices = (split.train_indices, split.test_indices) if hasattr(split, "train_indices") else split
+        train = df.iloc[list(train_indices)].reset_index(drop=True).copy()
+        test = df.iloc[list(test_indices)].reset_index(drop=True).copy()
+        fitted_macro = refit_macro(macro, train)
+        train[MACRO_COLUMN] = fitted_macro.labels.astype(str).to_numpy()
+        test[MACRO_COLUMN] = apply_macro(fitted_macro, test).labels.astype(str).to_numpy()
+        macro_fit = fit_linear_model(train, macro_features, target_column)
+        micro_fit = fit_linear_model(train, micro_features, target_column)
+        specificity_fit = fit_linear_model(train, [MACRO_COLUMN], target_column)
+        fold_scores.append(predict_r2(macro_fit, test, macro_features, target_column))
+        micro_scores.append(predict_r2(micro_fit, test, micro_features, target_column))
+        specificity_scores.append(max(0.0, predict_r2(specificity_fit, test, [MACRO_COLUMN], target_column)))
+    if not fold_scores:
+        raise ValueError("No development validation folds were supplied.")
+    macro_r2 = float(np.mean(fold_scores))
+    micro_r2 = float(np.mean(micro_scores))
+    specificity = float(np.mean(specificity_scores))
     stability = fold_stability(fold_scores)
-    compression = compression_score(macro.state_count, len(working))
+    compression = compression_score(macro.state_count, len(df))
 
     positive_macro_r2 = max(macro_r2, 0.0)
     positive_micro_r2 = max(micro_r2, 0.0)
@@ -102,7 +117,7 @@ def score_macro(
         stability=float(stability),
         compression=float(compression),
         state_count=macro.state_count,
-        row_count=len(working),
+        row_count=len(df),
         fold_scores=tuple(float(value) for value in fold_scores),
     )
 

@@ -26,6 +26,7 @@ class LaggedDataset:
     lag: int
     id_column: str
     time_column: str
+    target_time_column: str = "__lead_time"
 
 
 def load_panel_csv(path: str) -> pd.DataFrame:
@@ -83,6 +84,10 @@ def build_lagged_table(
     missing_outcomes = [name for name in selected_outcomes if name not in df.columns]
     if missing_outcomes:
         raise ValueError(f"Outcome columns not found: {missing_outcomes}")
+    generated_columns = {"__lead_time", "__ced_sort_time", *(f"{name}__lead{lag}" for name in selected_outcomes)}
+    collisions = sorted(name for name in df.columns if name in generated_columns or name.startswith("__ced_"))
+    if collisions:
+        raise ValueError(f"Input columns collide with generated modeling columns: {collisions}")
 
     ordered = _sort_panel(df, spec)
     result = ordered.copy()
@@ -92,7 +97,12 @@ def build_lagged_table(
         target = f"{outcome}__lead{lag}"
         target_columns[outcome] = target
         result[target] = grouped[outcome].shift(-lag)
-    result["__lead_time"] = grouped[spec.time_column].shift(-lag)
+    # Nullable integers preserve exact timestamp precision across the trailing
+    # missing lead, instead of promoting large integer timestamps to float.
+    timestamps = result[spec.time_column]
+    if pd.api.types.is_integer_dtype(timestamps):
+        timestamps = timestamps.astype("UInt64" if pd.api.types.is_unsigned_integer_dtype(timestamps) else "Int64")
+    result["__lead_time"] = timestamps.groupby(result[spec.id_column], sort=False).shift(-lag)
     result = result.dropna(subset=list(target_columns.values())).reset_index(drop=True)
     return LaggedDataset(
         data=result,
@@ -101,12 +111,19 @@ def build_lagged_table(
         lag=lag,
         id_column=spec.id_column,
         time_column=spec.time_column,
+        target_time_column="__lead_time",
     )
 
 
 def _sort_panel(df: pd.DataFrame, spec: StudySpec) -> pd.DataFrame:
-    parsed_time = pd.to_datetime(df[spec.time_column], errors="coerce")
-    time_values = parsed_time if parsed_time.notna().all() else df[spec.time_column]
+    raw_time = df[spec.time_column]
+    if pd.api.types.is_datetime64_any_dtype(raw_time):
+        time_values = pd.to_datetime(raw_time, errors="coerce", utc=True)
+    else:
+        numeric = pd.to_numeric(raw_time, errors="coerce")
+        time_values = numeric if numeric.notna().all() else pd.to_datetime(raw_time, errors="coerce", utc=True)
+    if time_values.isna().any():
+        raise ValueError(f"Timestamp column {spec.time_column!r} must be numeric or parseable as datetimes.")
     ordered = df.assign(__ced_sort_time=time_values)
     return (
         ordered.sort_values([spec.id_column, "__ced_sort_time"], kind="mergesort")

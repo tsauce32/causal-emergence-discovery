@@ -57,8 +57,74 @@ entities.
    - cross-fold stability
    - compression
    - difference from a raw micro-feature reference
-6. Estimates simple intervention-to-outcome pathway coefficients adjusted for
-   the selected macro state and declared environment columns.
+6. Locks the selected macro and evaluates it on a reserved outer holdout.
+7. Reports exploratory intervention coefficients using an explicit adjustment
+   declaration and compares them with macro-only adjustment on development rows.
+
+## Validation and adjustment
+
+Discovery defaults to `entity_holdout`: the outer holdout and inner folds keep
+all modeling observations of each entity together. This estimates transfer to
+new entities. Choose `forward_time` to estimate prediction in future periods
+with expanding training windows, or `within_entity_interpolation` for interior
+time blocks from already observed entities. These modes answer different
+questions; their R² values should not be treated as interchangeable estimates.
+
+```bash
+ced discover panel.csv study.json --validation-mode entity_holdout --folds 3 --holdout-fraction 0.2 --seed 0 --output result.json
+ced discover panel.csv study.json --validation-mode forward_time --folds 3 --output future-result.json
+```
+
+Quantile cutpoints, missing-value medians, composite scaling, k-means centers,
+and regression categories are fitted on each inner training fold. State merges
+are candidate recipes evaluated with those fitted transforms. Specificity is
+the positive validation R² of state means learned on the training fold. Search
+and outcome-dependent ranking use development data only. The chosen recipe is
+refitted on development data, frozen, and evaluated once on the outer holdout.
+
+`top_macros` and `searches` are development selection results, which can be
+optimistic after searching many candidates. `outer_evaluation` contains the
+selected macro's untouched holdout R² and the micro reference on the same rows.
+It does not calculate holdout specificity, rank other macros, or report a
+composite emergence score. Negative R² is preserved. The score formula is still
+experimental; predictive improvement is separate from causal identification.
+
+`validation` records the exact row positions, their source frame, entity and
+time coverage, and purged/excluded rows. Forward splits purge training leads
+that reach the first test predictor time. Interpolation purges overlapping
+predictor-to-target windows in both directions. Lag counts observations within
+an entity, not calendar intervals. Too few entities, usable timestamps, rows,
+or nonconstant finite targets raises an error; folds are never silently reduced.
+Rows contribute equally to R² within each split, and development fold R² values
+are averaged equally; entity holdout keeps sampling units whole but does not
+make a long trajectory and a short trajectory carry equal metric weight.
+
+Column roles describe variables; they do not determine a valid adjustment set.
+For example, a declared pre-treatment common cause can be included explicitly:
+
+```json
+"adjustment": {
+  "columns": ["u"],
+  "rationale": "u is a measured pre-treatment common cause of treatment and outcome",
+  "include_macro": false
+}
+```
+
+Without this declaration, pathway coefficients are treatment-only associations.
+`include_macro: true` adds the selected discrete macro while retaining all
+declared covariates. Context/environment roles never automatically add
+covariates. The `adjustment` report compares macro-only and declared adjustment,
+and flags declared covariates omitted or coarsened by the macro. A coefficient
+change is a descriptive diagnostic; stability does not establish sufficiency.
+Causal interpretation would require a justified pre-treatment adjustment set,
+conditional exchangeability, consistency, positivity, appropriate interference
+assumptions, and a correctly specified model. Current standard errors assume
+independent rows and are unsuitable for inference on repeated trajectories.
+
+See [validation design](docs/validation.md) for contracts, control experiments,
+and integration notes. The standalone `cross_validated_r2()` and `score_macro()`
+helpers retain row interpolation when no splits are supplied; they do not
+reserve a final holdout. Use `run_discovery()` for selected-model evaluation.
 
 ## Quick Start
 

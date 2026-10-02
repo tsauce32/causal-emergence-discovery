@@ -7,13 +7,15 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
+import numpy as np
 
-from causal_emergence_discovery.macro import MacroAssignment, generate_candidate_macros, merge_macro_states
-from causal_emergence_discovery.models import effect_estimates
+from causal_emergence_discovery.macro import MacroAssignment, apply_macro, generate_candidate_macros, merge_macro_states, refit_macro
+from causal_emergence_discovery.models import fit_linear_model, predict_r2
 from causal_emergence_discovery.panel import build_lagged_table, load_panel_csv, validate_panel
 from causal_emergence_discovery.scoring import MACRO_COLUMN
 from causal_emergence_discovery.search import greedy_macro_search
 from causal_emergence_discovery.spec import StudySpec, load_spec
+from causal_emergence_discovery.validation import build_validation_plan
 
 
 @dataclass(frozen=True)
@@ -27,6 +29,9 @@ class DiscoveryConfig:
     branching_factor: int = 2
     folds: int = 5
     top_k: int = 10
+    validation_mode: str = "entity_holdout"
+    holdout_fraction: float = 0.2
+    seed: int = 0
 
 
 def discover_from_csv(
@@ -47,10 +52,24 @@ def run_discovery(
 ) -> dict[str, Any]:
     """Run the MVP causal-emergence discovery workflow."""
     config = config or DiscoveryConfig()
+    if config.top_k < 1 or config.max_states < 2:
+        raise ValueError("top_k must be positive and max_states must be at least two.")
     panel_summary = validate_panel(df, spec)
     outcome = _resolve_outcome(spec, df, config.outcome)
     lagged = build_lagged_table(df, spec, outcomes=[outcome], lag=config.lag)
     target_column = lagged.target_columns[outcome]
+    plan = build_validation_plan(
+        lagged.data,
+        id_column=spec.id_column,
+        time_column=spec.time_column,
+        target_time_column=lagged.target_time_column,
+        mode=config.validation_mode,
+        folds=config.folds,
+        holdout_fraction=config.holdout_fraction,
+        seed=config.seed,
+    )
+    development = lagged.data.iloc[list(plan.outer.train_indices)].reset_index(drop=True)
+    holdout = lagged.data.iloc[list(plan.outer.test_indices)].reset_index(drop=True)
 
     available_columns = list(df.columns)
     micro_features = spec.feature_columns(available_columns)
@@ -63,7 +82,7 @@ def run_discovery(
         raise ValueError("No candidate macro feature columns are available.")
 
     initial_macros = generate_candidate_macros(
-        lagged.data,
+        development,
         macro_features,
         max_states=config.max_states,
     )
@@ -72,7 +91,7 @@ def run_discovery(
 
     searches = [
         greedy_macro_search(
-            lagged.data,
+            development,
             macro,
             outcome=outcome,
             target_column=target_column,
@@ -81,6 +100,7 @@ def run_discovery(
             folds=config.folds,
             n_paths=config.paths,
             branching_factor=config.branching_factor,
+            validation_splits=plan.inner,
         )
         for macro in initial_macros
     ]
@@ -95,24 +115,27 @@ def run_discovery(
         ),
         reverse=True,
     )[: config.top_k]
+    for record in top_macros:
+        record["evaluation_scope"] = "development_selection_only"
+        record["specificity_definition"] = "positive_validation_r2_of_training_state_means"
 
-    best_macro = _find_macro_for_record(initial_macros, searches, top_macros[0])
-    pathway_table = lagged.data.copy()
-    pathway_table[MACRO_COLUMN] = best_macro.labels.to_numpy()
-    adjustment_columns = [MACRO_COLUMN, *environment_columns]
-    pathways = effect_estimates(
-        pathway_table,
-        intervention_columns,
-        target_column,
-        adjustment_columns,
+    best_macro = refit_macro(_find_macro_for_record(initial_macros, searches, top_macros[0]), development)
+    evaluation = _evaluate_selected_macro(
+        development, holdout, best_macro, target_column, micro_features, intervention_columns,
     )
+    pathway_table = development.copy()
+    pathway_table[MACRO_COLUMN] = best_macro.labels.astype(str).to_numpy()
+    adjustment = _adjustment_report(pathway_table, spec, best_macro, intervention_columns, target_column)
+    pathways = adjustment["pathways"]
 
     return {
         "library": "causal-emergence-discovery",
         "status": "experimental_hypothesis_generation",
         "assumptions": [
             "Rows are longitudinal observations of the same entities over time.",
-            "Only earlier rows are used to explain later outcomes at the requested lag.",
+            "Lag means the requested number of observations within an entity, not necessarily calendar intervals.",
+            "The declared validation mode determines the predictive estimand; training lead outcomes respect split boundaries.",
+            "Macro recipes and ranking use development data only; the selected recipe is evaluated once on the reserved holdout.",
             "Intervention coefficients are adjustment-based observational estimates, not proof of causal effects.",
             "Macro variables are scored by outcome clarity, specificity, stability, and compression.",
         ],
@@ -130,6 +153,9 @@ def run_discovery(
             "branching_factor": config.branching_factor,
             "folds": config.folds,
             "top_k": config.top_k,
+            "validation_mode": config.validation_mode,
+            "holdout_fraction": config.holdout_fraction,
+            "seed": config.seed,
         },
         "columns": {
             "micro_features": micro_features,
@@ -140,8 +166,11 @@ def run_discovery(
         },
         "top_macros": top_macros,
         "candidate_pathways": pathways,
+        "adjustment": adjustment,
+        "validation": plan.to_dict(),
+        "outer_evaluation": evaluation,
         "searches": searches,
-        "warnings": _warnings(intervention_columns, environment_columns),
+        "warnings": [*_warnings(intervention_columns, environment_columns), *adjustment.get("warnings", [])],
     }
 
 
@@ -164,13 +193,64 @@ def _find_macro_for_record(
     record: dict[str, object],
 ) -> MacroAssignment:
     name = str(record["macro_name"])
-    for macro in initial_macros:
-        if name == macro.name:
-            return macro
-        prefix = f"{macro.name}|"
-        if name.startswith(prefix):
-            return _apply_merge_name(macro, name.removeprefix(prefix))
-    return initial_macros[0]
+    # Recipe names can collide (e.g. a column literally named 'composite').
+    # Recover the originating search, not the first matching display name.
+    for macro, search in zip(initial_macros, searches):
+        if search["best"] is record or search["best"] == record:
+            if name == macro.name:
+                return macro
+            prefix = f"{macro.name}|"
+            if name.startswith(prefix):
+                return _apply_merge_name(macro, name.removeprefix(prefix))
+    raise ValueError(f"Selected macro recipe could not be recovered: {name}")
+
+
+def _evaluate_selected_macro(
+    train: pd.DataFrame,
+    test: pd.DataFrame,
+    macro: MacroAssignment,
+    target_column: str,
+    micro_features: list[str],
+    interventions: list[str],
+) -> dict[str, Any]:
+    """Evaluate one locked recipe; no holdout-driven selection or specificity."""
+    train = train.copy()
+    test = test.copy()
+    test_macro = apply_macro(macro, test)
+    train[MACRO_COLUMN] = macro.labels.astype(str).to_numpy()
+    test[MACRO_COLUMN] = test_macro.labels.astype(str).to_numpy()
+    macro_columns = list(dict.fromkeys([*interventions, MACRO_COLUMN]))
+    micro_columns = list(dict.fromkeys([*interventions, *micro_features]))
+    macro_fit = fit_linear_model(train, macro_columns, target_column)
+    micro_fit = fit_linear_model(train, micro_columns, target_column)
+    macro_r2 = predict_r2(macro_fit, test, macro_columns, target_column)
+    micro_r2 = predict_r2(micro_fit, test, micro_columns, target_column)
+    test_target = pd.to_numeric(test[target_column], errors="coerce").replace([np.inf, -np.inf], np.nan)
+    seen_states = set(macro.labels.tolist())
+    return {
+        "scope": "untouched_outer_holdout_selected_macro",
+        "macro_name": macro.name,
+        "macro_r2": macro_r2,
+        "micro_r2": micro_r2,
+        "predictive_r2_difference": macro_r2 - micro_r2,
+        "train_rows": len(train),
+        "test_rows": len(test),
+        "finite_train_targets": macro_fit.nobs,
+        "finite_test_targets": int(test_target.notna().sum()),
+        "nonfinite_test_targets_excluded": int(test_target.isna().sum()),
+        "metric_weighting": "Rows contribute equally within a split; development fold R2 values are averaged equally.",
+        "training_state_count": macro.state_count,
+        "holdout_state_sizes": {str(int(state)): int(count) for state, count in test_macro.labels.value_counts().sort_index().items()},
+        "unseen_state_rows": int((~test_macro.labels.isin(seen_states)).sum()),
+        "encoder": macro.metadata,
+        "note": "Predictive metrics for the selected recipe, not a causal effect or a composite emergence score. Negative R2 is retained.",
+    }
+
+
+def _adjustment_report(df, spec, macro, interventions, target_column):
+    # Kept separate from predictive evaluation: never fit pathways on holdout outcomes.
+    from causal_emergence_discovery.adjustment import adjustment_sufficiency_audit
+    return adjustment_sufficiency_audit(df, spec, macro, interventions=interventions, target_column=target_column)
 
 
 def _apply_merge_name(macro: MacroAssignment, suffix: str) -> MacroAssignment:

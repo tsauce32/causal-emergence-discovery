@@ -29,6 +29,7 @@ def greedy_macro_search(
     n_paths: int = 10,
     branching_factor: int = 2,
     min_states: int = 2,
+    validation_splits=None,
 ) -> dict[str, object]:
     """Search for coarser macro variables by merging macro states."""
     if n_paths < 1:
@@ -46,6 +47,7 @@ def greedy_macro_search(
         micro_feature_columns=micro_feature_columns,
         intervention_columns=intervention_columns,
         folds=folds,
+        validation_splits=validation_splits,
     )
     start_record = _record(initial_macro, start_score)
     frontier = [SearchNode(initial_macro, start_score, (start_record,))]
@@ -67,6 +69,7 @@ def greedy_macro_search(
                     micro_feature_columns=micro_feature_columns,
                     intervention_columns=intervention_columns,
                     folds=folds,
+                    validation_splits=validation_splits,
                 )
                 candidate_node = SearchNode(
                     candidate,
